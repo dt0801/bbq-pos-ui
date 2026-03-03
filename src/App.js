@@ -260,7 +260,7 @@ export default function App() {
 
   // ----- STATS STATE -----
   const [statsToday, setStatsToday]   = useState(null);
-  const [_statsDaily, setStatsDaily] = useState([]);
+  const [, setStatsDaily] = useState([]);
   const [statsMonth, setStatsMonth]   = useState(new Date().toISOString().slice(0, 7));
 
   // ----- DERIVED -----
