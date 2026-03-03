@@ -224,7 +224,7 @@ export default function App() {
       setTestingPrinter(p => ({ ...p, [key]: false }));
     }
   };
-  const testPrinter = () => testPrinterByKey("kitchen");
+  // const testPrinter = () => testPrinterByKey("kitchen");
 
   /**
    * kitchenSent: lưu số lượng đã gửi bếp theo từng món
@@ -260,7 +260,7 @@ export default function App() {
 
   // ----- STATS STATE -----
   const [statsToday, setStatsToday]   = useState(null);
-  const [statsDaily, setStatsDaily]   = useState([]);
+  const [_statsDaily, setStatsDaily] = useState([]);
   const [statsMonth, setStatsMonth]   = useState(new Date().toISOString().slice(0, 7));
 
   // ----- DERIVED -----
@@ -273,7 +273,7 @@ export default function App() {
   const currentItems  = Object.values(tableOrders[currentTable] || {});
   const total         = calcTotal(tableOrders[currentTable]);
   const filteredMenu  = filterMenu(menu, filter);
-  const isManageView  = sidebarView === "manage";
+  // const isManageView  = sidebarView === "manage";
 
   // Theme classes
   const bg      = darkMode ? "bg-[#0f172a]"  : "bg-gray-100";
