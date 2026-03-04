@@ -73,7 +73,7 @@ const calcTotal    = (td = {}) => Object.values(td).reduce((s, i) => s + i.price
 const calcTotalQty = (td = {}) => Object.values(td).reduce((s, i) => s + i.qty, 0);
 
 function AppInner() {
-  const { logout, user } = useAuth();
+  const { logout, user, getToken } = useAuth();
   const role = user?.role || "waiter"; // "admin" | "cashier" | "waiter"
   const canPay     = role === "admin" || role === "cashier"; // thanh toán & tạm tính
   const canManage  = role === "admin" || role === "cashier"; // quản lý món
@@ -115,6 +115,13 @@ function AppInner() {
   const [kitchenSent, setKitchenSent]       = useState({});
   const [itemNotes, setItemNotes]           = useState({});
   const [manageTab, setManageTab]           = useState("add");
+
+  // User management state (admin only)
+  const [staffList, setStaffList]           = useState([]);
+  const [staffForm, setStaffForm]           = useState({ username:"", password:"", role:"waiter", full_name:"" });
+  const [staffEditing, setStaffEditing]     = useState(null);
+  const [staffShowForm, setStaffShowForm]   = useState(false);
+  const [staffError, setStaffError]         = useState("");
   const [newItem, setNewItem]               = useState({ name: "", price: "", type: "FOOD" });
   const [file, setFile]                     = useState(null);
   const [editItem, setEditItem]             = useState(null);
@@ -246,6 +253,42 @@ function AppInner() {
   const renameTable = async () => { if(!editingTable)return;const{table_num,new_num}=editingTable;if(!new_num||Number(new_num)<1)return showTableMsg("err","Số bàn không hợp lệ");if(Number(new_num)===table_num){setEditingTable(null);return;}const res=await fetch(`${API_URL}/tables/${table_num}`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({new_num:Number(new_num)})});const d=await res.json();if(!res.ok)return showTableMsg("err",d.error);setEditingTable(null);showTableMsg("ok",`Đã đổi Bàn ${table_num} → Bàn ${new_num}`);fetchTableList();fetchTableStatus(); };
   const deleteTable = async (num) => { if(!window.confirm(`Xóa Bàn ${num}?`))return;const inDb=tableList.find(t=>t.table_num===num);if(inDb){const res=await fetch(`${API_URL}/tables/${num}`,{method:"DELETE"});const d=await res.json();if(!res.ok)return showTableMsg("err",d.error);}setTableList(p=>p.filter(t=>t.table_num!==num));showTableMsg("ok",`Đã xóa Bàn ${num}`);fetchTableStatus(); };
 
+  // ─── User management handlers ─────────────────────────────────────────────
+  const authHeaders = () => ({ "Content-Type": "application/json", "Authorization": `Bearer ${getToken()}` });
+
+  const fetchStaff = useCallback(() => {
+    fetch(`${API_URL}/users`, { headers: authHeaders() }).then(r=>r.json()).then(setStaffList).catch(()=>{});
+  }, []); // eslint-disable-line
+
+  useEffect(() => { if (role === "admin") fetchStaff(); }, [role]); // eslint-disable-line
+
+  const openCreateStaff = () => { setStaffEditing(null); setStaffForm({username:"",password:"",role:"waiter",full_name:""}); setStaffError(""); setStaffShowForm(true); };
+  const openEditStaff   = (u) => { setStaffEditing(u); setStaffForm({username:u.username,password:"",role:u.role,full_name:u.full_name||"",active:u.active}); setStaffError(""); setStaffShowForm(true); };
+
+  const submitStaff = async () => {
+    setStaffError("");
+    try {
+      let res;
+      if (staffEditing) {
+        const body = { full_name: staffForm.full_name, role: staffForm.role, active: staffForm.active };
+        if (staffForm.password) body.password = staffForm.password;
+        res = await fetch(`${API_URL}/users/${staffEditing.id}`, { method:"PUT", headers:authHeaders(), body:JSON.stringify(body) });
+      } else {
+        if (!staffForm.username || !staffForm.password) return setStaffError("Vui lòng điền đầy đủ thông tin");
+        res = await fetch(`${API_URL}/users`, { method:"POST", headers:authHeaders(), body:JSON.stringify(staffForm) });
+      }
+      const d = await res.json();
+      if (!res.ok) return setStaffError(d.error || "Lỗi không xác định");
+      setStaffShowForm(false); fetchStaff();
+    } catch(e) { setStaffError(e.message); }
+  };
+
+  const deleteStaff = async (u) => {
+    if (!window.confirm(`Xóa tài khoản "${u.username}"?`)) return;
+    await fetch(`${API_URL}/users/${u.id}`, { method:"DELETE", headers:authHeaders() });
+    fetchStaff();
+  };
+
   // ─── Sub-components ───────────────────────────────────────────────────────
 
   const OrderPanel = () => (
@@ -347,7 +390,12 @@ function AppInner() {
   const ManageView = () => (
     <div className="flex flex-col h-full overflow-hidden">
       <div className="flex gap-2 mb-4 flex-wrap flex-shrink-0">
-        {[["add",<><i className="fa-solid fa-plus mr-1"/>Thêm món</>],["edit",<><i className="fa-solid fa-pen-to-square mr-1"/>Sửa món</>],["table",<><i className="fa-solid fa-chair mr-1"/>Bàn</>]].map(([tab,label])=>(
+        {[
+          ["add",   <><i className="fa-solid fa-plus mr-1"/>Thêm món</>],
+          ["edit",  <><i className="fa-solid fa-pen-to-square mr-1"/>Sửa món</>],
+          ["table", <><i className="fa-solid fa-chair mr-1"/>Bàn</>],
+          ...(role==="admin" ? [["staff", <><i className="fa-solid fa-users mr-1"/>Nhân viên</>]] : []),
+        ].map(([tab,label])=>(
           <button key={tab} onClick={()=>{setManageTab(tab);setEditItem(null);setEditingTable(null);}} className={`px-4 py-2 rounded-full text-sm font-semibold transition ${manageTab===tab?"bg-blue-500 text-white":`${bgCard} ${textSub} hover:bg-slate-600`}`}>{label}</button>
         ))}
       </div>
@@ -420,6 +468,83 @@ function AppInner() {
               ))}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ── Tab Nhân viên (admin only) ── */}
+      {manageTab==="staff"&&role==="admin"&&(
+        <div className="flex flex-col gap-4 overflow-y-auto pb-4 max-w-lg">
+
+          {/* Modal tạo/sửa */}
+          {staffShowForm&&(
+            <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+              <div className={`${bgCard} rounded-2xl p-6 w-full max-w-sm flex flex-col gap-4`}>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-base">{staffEditing?"Sửa tài khoản":"Tạo tài khoản mới"}</h3>
+                  <button onClick={()=>setStaffShowForm(false)} className={`${textSub} hover:text-white text-xl`}><i className="fa-solid fa-xmark"/></button>
+                </div>
+                {!staffEditing&&(
+                  <div><label className={`block text-sm ${textSub} mb-1`}>Username</label>
+                  <input value={staffForm.username} onChange={e=>setStaffForm(f=>({...f,username:e.target.value}))} placeholder="vd: nhanvien1" className={inputCls}/></div>
+                )}
+                <div><label className={`block text-sm ${textSub} mb-1`}>Họ tên</label>
+                <input value={staffForm.full_name} onChange={e=>setStaffForm(f=>({...f,full_name:e.target.value}))} placeholder="Tên nhân viên" className={inputCls}/></div>
+                <div><label className={`block text-sm ${textSub} mb-1`}>{staffEditing?"Mật khẩu mới (để trống nếu không đổi)":"Mật khẩu"}</label>
+                <input type="password" value={staffForm.password} onChange={e=>setStaffForm(f=>({...f,password:e.target.value}))} placeholder="••••••" className={inputCls}/></div>
+                <div><label className={`block text-sm ${textSub} mb-1`}>Vai trò</label>
+                <select value={staffForm.role} onChange={e=>setStaffForm(f=>({...f,role:e.target.value}))} className={inputCls}>
+                  <option value="waiter">Nhân viên order</option>
+                  <option value="cashier">Thu ngân</option>
+                  <option value="admin">Admin</option>
+                </select></div>
+                {staffEditing&&(
+                  <label className={`flex items-center gap-3 cursor-pointer text-sm ${textSub}`}>
+                    <input type="checkbox" checked={staffForm.active!==false} onChange={e=>setStaffForm(f=>({...f,active:e.target.checked}))} className="w-4 h-4 accent-blue-500"/>
+                    Tài khoản đang hoạt động
+                  </label>
+                )}
+                {staffError&&<div className="text-red-400 text-sm bg-red-500/10 px-3 py-2 rounded-xl">{staffError}</div>}
+                <div className="flex gap-3">
+                  <button onClick={submitStaff} className="flex-1 bg-blue-500 hover:bg-blue-600 py-2.5 rounded-xl font-bold text-white text-sm transition">{staffEditing?"Lưu thay đổi":"Tạo tài khoản"}</button>
+                  <button onClick={()=>setStaffShowForm(false)} className={`flex-1 ${bgCard} py-2.5 rounded-xl font-bold text-sm transition hover:bg-slate-600`}>Hủy</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-base"><i className="fa-solid fa-users mr-2 text-blue-400"/>Danh sách nhân viên</h3>
+            <button onClick={openCreateStaff} className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold rounded-xl transition">
+              <i className="fa-solid fa-plus mr-1"/>Thêm
+            </button>
+          </div>
+
+          {staffList.length===0
+            ? <div className={`${bgCard} rounded-2xl p-8 text-center ${textSub} text-sm`}>Chưa có nhân viên nào</div>
+            : staffList.map(u=>{
+                const roleColor = u.role==="admin"?"text-red-400 bg-red-500/10":u.role==="cashier"?"text-yellow-400 bg-yellow-500/10":"text-green-400 bg-green-500/10";
+                const roleLabel = u.role==="admin"?"Admin":u.role==="cashier"?"Thu ngân":"NV Order";
+                return(
+                  <div key={u.id} className={`${bgCard} rounded-2xl p-4 flex items-center gap-3`}>
+                    <div className="w-10 h-10 rounded-full bg-slate-600 flex items-center justify-center flex-shrink-0 font-bold text-white text-base">
+                      {(u.full_name||u.username||"?")[0].toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-bold text-sm">{u.full_name||u.username}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${roleColor}`}>{roleLabel}</span>
+                        {!u.active&&<span className="text-xs px-2 py-0.5 rounded-full bg-slate-600 text-slate-400">Đã khóa</span>}
+                      </div>
+                      <div className={`text-xs mt-0.5 ${textSub}`}>@{u.username}</div>
+                    </div>
+                    <div className="flex gap-2 flex-shrink-0">
+                      <button onClick={()=>openEditStaff(u)} className={`w-8 h-8 rounded-xl flex items-center justify-center ${darkMode?"bg-slate-600 hover:bg-blue-500":"bg-gray-200 hover:bg-blue-500 hover:text-white"} transition`}><i className="fa-solid fa-pen text-xs"/></button>
+                      <button onClick={()=>deleteStaff(u)} disabled={u.username==="admin"} className={`w-8 h-8 rounded-xl flex items-center justify-center transition ${u.username==="admin"?"bg-slate-700 text-slate-600 cursor-not-allowed":darkMode?"bg-slate-600 hover:bg-red-500 hover:text-white":"bg-gray-200 hover:bg-red-500 hover:text-white"}`}><i className="fa-solid fa-trash text-xs"/></button>
+                    </div>
+                  </div>
+                );
+              })
+          }
         </div>
       )}
     </div>
