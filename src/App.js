@@ -8,7 +8,6 @@ import LoginScreen from './LoginScreen';
 // =============================================
 
 const TOTAL_TABLES = 20;
-// label hiển thị trên nút, key dùng để lọc
 const FILTERS = [
   { key: "ALL",      label: "Tất cả"    },
   { key: "COMBO",    label: "Combo"     },
@@ -28,18 +27,15 @@ const FILTERS = [
   { key: "COM_MI",   label: "Cơm - Mì"  },
   { key: "DRINK",    label: "Đồ uống"   },
 ];
-// Dev: React chạy port 3001, server port 3000
-// Production Electron: cả 2 cùng port 3000
+
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
 // =============================================
 // HELPER FUNCTIONS
 // =============================================
 
-/** Format số tiền VND */
 const formatMoney = (n) => new Intl.NumberFormat("vi-VN").format(n * 1000) + "đ";
 
-/** Bỏ dấu tiếng Việt để so sánh không bị lỗi encoding */
 const removeTones = (str) => {
   const map = {
     'à':'a','á':'a','ả':'a','ã':'a','ạ':'a',
@@ -59,10 +55,8 @@ const removeTones = (str) => {
   return str.toLowerCase().split('').map(c => map[c] || c).join('');
 };
 
-/** Lọc menu theo filter – dùng removeTones để tránh lỗi encoding tiếng Việt */
 const filterMenu = (menu, filter) => {
   if (filter === "ALL") return menu;
-  // So sánh không dấu
   const r = (m) => removeTones(m.name);
   const has  = (m, ...keys) => keys.some(k => r(m).includes(removeTones(k)));
   const hasN = (m, ...keys) => !keys.some(k => r(m).includes(removeTones(k)));
@@ -89,15 +83,12 @@ const filterMenu = (menu, filter) => {
   return fn ? menu.filter(fn) : menu;
 };
 
-/** Tính tổng tiền của 1 bàn */
 const calcTotal = (tableData = {}) =>
   Object.values(tableData).reduce((s, i) => s + i.price * i.qty, 0);
 
-/** Tính tổng số lượng món của 1 bàn */
 const calcTotalQty = (tableData = {}) =>
   Object.values(tableData).reduce((s, i) => s + i.qty, 0);
 
-/** Trả về class màu theo status bàn */
 const tableColor = (status, isSelected) => {
   if (isSelected) return "bg-blue-500 text-white";
   if (status === "OPEN") return "bg-orange-500 text-white";
@@ -105,20 +96,18 @@ const tableColor = (status, isSelected) => {
 };
 
 // =============================================
-// MAIN COMPONENT
+// MAIN APP COMPONENT (all hooks here, no early returns before hooks)
 // =============================================
-export default function App() {
-  const { user, logout, ready } = useAuth();
-  if (!ready) return null;
-  if (!user) return <LoginScreen />;
+function AppInner() {
+  const { logout } = useAuth();
 
   // ----- CORE STATE -----
   const [menu, setMenu]               = useState([]);
   const [currentTable, setCurrentTable] = useState(null);
-  const [tableOrders, setTableOrders] = useState({});       // { [tableNum]: { [itemId]: {...item, qty} } }
-  const [tableStatus, setTableStatus] = useState({});       // { [tableNum]: "OPEN" | "PAID" }
-  const [filter, setFilter]           = useState("ALL");  // key từ FILTERS
-  const [sidebarView, setSidebarView] = useState("order");  // "order" | "manage" | "history" | "stats"
+  const [tableOrders, setTableOrders] = useState({});
+  const [tableStatus, setTableStatus] = useState({});
+  const [filter, setFilter]           = useState("ALL");
+  const [sidebarView, setSidebarView] = useState("order");
 
   // ----- CHUYỂN BÀN -----
   const [showTransferModal, setShowTransferModal] = useState(false);
@@ -126,15 +115,12 @@ export default function App() {
   // ----- DARK/LIGHT MODE -----
   const [darkMode, setDarkMode] = useState(true);
 
-  // Trạng thái kết nối máy in: null | "online" | "offline"
   const [printerStatus, setPrinterStatus] = useState(null);
-
-  // Danh sách máy in Windows
   const [windowsPrinters, setWindowsPrinters] = useState([]);
   const [loadingPrinters, setLoadingPrinters] = useState(false);
 
   // Settings
-  const [settings, setSettings]     = useState({
+  const [settings, setSettings] = useState({
     kitchen_printer_connection: "IP", kitchen_printer_ip: "192.168.1.100", kitchen_printer_usb_name: "",
     tamtinh_printer_connection: "IP", tamtinh_printer_ip: "192.168.1.100", tamtinh_printer_usb_name: "",
     payment_printer_connection: "IP", payment_printer_ip: "192.168.1.100", payment_printer_usb_name: "",
@@ -156,7 +142,6 @@ export default function App() {
   const [statsYearlyData,  setStatsYearlyData]  = useState(null);
   const [statsYear,     setStatsYear]     = useState(new Date().getFullYear().toString());
 
-  // Load settings từ server khi khởi động
   useEffect(() => {
     fetch(`${API_URL}/settings`)
       .then(r => r.json())
@@ -164,7 +149,6 @@ export default function App() {
       .catch(() => {});
   }, []);
 
-  // Kiểm tra máy in khi app khởi động và mỗi 30 giây
   useEffect(() => {
     const checkPrinter = () => {
       fetch(`${API_URL}/print/status`)
@@ -177,7 +161,6 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Lưu 1 setting lên server
   const saveSetting = async (key, value) => {
     await fetch(`${API_URL}/settings`, {
       method: "POST",
@@ -186,14 +169,12 @@ export default function App() {
     });
   };
 
-  // Lưu toàn bộ settings
   const saveAllSettings = async () => {
     await Promise.all(Object.entries(settings).map(([k, v]) => saveSetting(k, v)));
     setSettingsSaved(true);
     setTimeout(() => setSettingsSaved(false), 2000);
   };
 
-  // Lấy danh sách máy in từ Windows
   const fetchWindowsPrinters = async () => {
     setLoadingPrinters(true);
     try {
@@ -206,7 +187,6 @@ export default function App() {
     setLoadingPrinters(false);
   };
 
-  // Test kết nối máy in với IP hiện tại
   const testPrinterByKey = async (key) => {
     setTestingPrinter(p => ({ ...p, [key]: true }));
     setTestResult(p => ({ ...p, [key]: null, [`${key}_method`]: null }));
@@ -229,21 +209,9 @@ export default function App() {
       setTestingPrinter(p => ({ ...p, [key]: false }));
     }
   };
-  // const testPrinter = () => testPrinterByKey("kitchen");
 
-  /**
-   * kitchenSent: lưu số lượng đã gửi bếp theo từng món
-   * { [tableNum]: { [itemId]: qty } }
-   * Dùng để biết món nào MỚI (chưa gửi bếp) hay đã gửi rồi
-   */
   const [kitchenSent, setKitchenSent] = useState({});
-
-  /**
-   * itemNotes: ghi chú từng món theo từng bàn
-   * { [tableNum]: { [itemId]: "ghi chú..." } }
-   */
   const [itemNotes, setItemNotes] = useState({});
-
 
   // ----- MANAGE STATE -----
   const [manageTab, setManageTab]   = useState("add");
@@ -261,7 +229,7 @@ export default function App() {
   // ----- HISTORY STATE -----
   const [bills, setBills]             = useState([]);
   const [historyDate, setHistoryDate] = useState(new Date().toISOString().split("T")[0]);
-  const [selectedBill, setSelectedBill] = useState(null); // chi tiết bill đang xem
+  const [selectedBill, setSelectedBill] = useState(null);
 
   // ----- STATS STATE -----
   const [statsToday, setStatsToday]   = useState(null);
@@ -269,8 +237,6 @@ export default function App() {
   const [statsMonth, setStatsMonth]   = useState(new Date().toISOString().slice(0, 7));
 
   // ----- DERIVED -----
-  // Danh sách số bàn – lấy từ tableList (đã merge DB + settings)
-  // fallback về 1..20 nếu tableList chưa load xong
   const tables = tableList.length > 0
     ? tableList.map(t => t.table_num)
     : Array.from({ length: TOTAL_TABLES }, (_, i) => i + 1);
@@ -278,7 +244,6 @@ export default function App() {
   const currentItems  = Object.values(tableOrders[currentTable] || {});
   const total         = calcTotal(tableOrders[currentTable]);
   const filteredMenu  = filterMenu(menu, filter);
-  // const isManageView  = sidebarView === "manage";
 
   // Theme classes
   const bg      = darkMode ? "bg-[#0f172a]"  : "bg-gray-100";
@@ -300,7 +265,6 @@ export default function App() {
       .catch(e => console.error("Lỗi fetch menu:", e));
   }, []);
 
-  /** Fetch trạng thái tất cả bàn từ server */
   const fetchTableStatus = useCallback(() => {
     fetch(`${API_URL}/tables`).then(r => r.json()).then(rows => {
       const map = {};
@@ -309,47 +273,36 @@ export default function App() {
     }).catch(e => console.error("Lỗi fetch tables:", e));
   }, []);
 
-  /** Fetch lịch sử hóa đơn theo ngày */
   const fetchBills = useCallback((date) => {
     fetch(`${API_URL}/bills?date=${date}`).then(r => r.json()).then(setBills)
       .catch(e => console.error("Lỗi fetch bills:", e));
   }, []);
 
-  /** Fetch thống kê hôm nay */
   const fetchStatsToday = useCallback(() => {
     fetch(`${API_URL}/stats/today`).then(r => r.json()).then(setStatsToday)
       .catch(e => console.error("Lỗi fetch stats today:", e));
   }, []);
 
-  /** Fetch doanh thu theo ngày trong tháng */
   const fetchStatsDaily = useCallback((month) => {
     fetch(`${API_URL}/stats/daily?month=${month}`).then(r => r.json()).then(setStatsDaily)
       .catch(e => console.error("Lỗi fetch stats daily:", e));
   }, []);
 
-  /** Fetch chi tiết 1 bill */
   const fetchBillDetail = async (id) => {
     const data = await fetch(`${API_URL}/bills/${id}`).then(r => r.json());
     setSelectedBill(data);
   };
 
-  /** Fetch danh sách bàn đầy đủ cho trang quản lý
-   *  Merge DB rows + tất cả bàn theo total_tables trong settings
-   *  để bàn chưa từng dùng vẫn hiện ra
-   */
   const fetchTableList = useCallback(() => {
     Promise.all([
       fetch(`${API_URL}/tables`).then(r => r.json()),
       fetch(`${API_URL}/settings`).then(r => r.json()),
     ]).then(([rows, cfg]) => {
       const settingTotal = Number(cfg.total_tables) || 20;
-      // Lấy số bàn lớn nhất trong DB (phòng trường hợp có bàn vượt settings)
       const dbMax = rows.reduce((max, r) => Math.max(max, r.table_num), 0);
       const total = Math.max(settingTotal, dbMax);
-      // Tạo map từ DB
       const dbMap = {};
       rows.forEach(r => { dbMap[r.table_num] = r.status; });
-      // Tạo danh sách đầy đủ 1..total, merge status từ DB
       const full = Array.from({ length: total }, (_, i) => ({
         table_num: i + 1,
         status: dbMap[i + 1] || "PAID",
@@ -358,15 +311,12 @@ export default function App() {
     }).catch(() => {});
   }, []);
 
-  // Load menu, trạng thái bàn VÀ danh sách bàn đầy đủ ngay khi khởi động
   useEffect(() => { fetchMenu(); fetchTableStatus(); fetchTableList(); }, [fetchMenu, fetchTableStatus, fetchTableList]);
 
-  // Khi vào tab manage → reload lại danh sách bàn cho chắc
   useEffect(() => {
     if (sidebarView === "manage") fetchTableList();
   }, [sidebarView, fetchTableList]);
 
-  // Khi chuyển sang tab history → load bills của ngày đang chọn
   useEffect(() => {
     if (sidebarView === "history") fetchBills(historyDate);
   }, [sidebarView, historyDate, fetchBills]);
@@ -391,7 +341,6 @@ export default function App() {
   // ORDER HANDLERS
   // =============================================
 
-  /** Thêm món vào bàn, tự động set bàn → OPEN */
   const addItem = useCallback((item) => {
     if (!currentTable) return alert("Vui lòng chọn bàn trước!");
 
@@ -407,13 +356,11 @@ export default function App() {
       };
     });
 
-    // Tự động mở bàn khi có món đầu tiên
     if (!tableStatus[currentTable] || tableStatus[currentTable] === "PAID") {
       updateTableStatus(currentTable, "OPEN");
     }
-  }, [currentTable, tableStatus]);
+  }, [currentTable, tableStatus]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  /** Tăng / giảm số lượng món */
   const updateQty = useCallback((itemId, action) => {
     if (!currentTable) return;
     setTableOrders(prev => {
@@ -431,7 +378,6 @@ export default function App() {
   // TABLE STATUS
   // =============================================
 
-  /** Cập nhật trạng thái bàn lên server và local state */
   const updateTableStatus = async (tableNum, status) => {
     setTableStatus(prev => ({ ...prev, [tableNum]: status }));
     await fetch(`${API_URL}/tables/${tableNum}/status`, {
@@ -442,14 +388,9 @@ export default function App() {
   };
 
   // =============================================
-  // BILLING – tách thành 3 bước riêng biệt
+  // BILLING
   // =============================================
 
-  /**
-   * Bước 2: In phiếu bếp (Kitchen ticket)
-   * - Chỉ in các món MỚI (chưa gửi bếp lần này)
-   * - Vẫn cho phép order tiếp → in thêm phiếu bếp
-   */
   const printKitchenTicket = async () => {
     if (!currentTable) return alert("Vui lòng chọn bàn!");
     if (currentItems.length === 0) return alert("Chưa có món nào!");
@@ -473,14 +414,12 @@ export default function App() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Lỗi máy in");
 
-      // Cập nhật kitchenSent để badge "mới" biến mất
       setKitchenSent(prev => ({
         ...prev,
         [currentTable]: Object.fromEntries(currentItems.map(i => [i.id, i.qty])),
       }));
 
     } catch (err) {
-      // Máy in POS lỗi → in popup trình duyệt
       const notes = itemNotes[currentTable] || {};
       const win = window.open("", "_blank", "width=500,height=600");
       win.document.write(`
@@ -515,7 +454,6 @@ export default function App() {
       win.focus();
       setTimeout(() => { win.print(); win.close(); }, 300);
 
-      // Vẫn cập nhật kitchenSent
       setKitchenSent(prev => ({
         ...prev,
         [currentTable]: Object.fromEntries(currentItems.map(i => [i.id, i.qty])),
@@ -523,15 +461,10 @@ export default function App() {
     }
   };
 
-  /**
-   * Bước 4: Thanh toán – lưu bill vào DB + in hóa đơn tài chính
-   * KHÔNG reset bàn ở đây, nhân viên reset thủ công ở bước 6
-   */
   const handlePayment = async () => {
     if (!currentTable) return;
     if (currentItems.length === 0) return alert("Bàn chưa có món!");
 
-    // 1. Lưu bill lên server
     await fetch(`${API_URL}/bills`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -542,9 +475,8 @@ export default function App() {
       }),
     });
 
-    // 2. In hóa đơn tài chính – mở cửa sổ in riêng
     const printBill = (items, total, tableNum) => {
-      const fmt = (n) => new Intl.NumberFormat("vi-VN").format(n * 1000) + "đ"; // giá lưu dạng k
+      const fmt = (n) => new Intl.NumberFormat("vi-VN").format(n * 1000) + "đ";
       const now = new Date().toLocaleString("vi-VN");
       const rows = items.map((item, i) => `
         <tr>
@@ -554,7 +486,7 @@ export default function App() {
         </tr>
       `).join("");
 
-      const win = window.open("", "_blank", "width=794,height=900"); // A4 ~ 794px
+      const win = window.open("", "_blank", "width=794,height=900");
       win.document.write(`
         <html><head><title>Hóa Đơn</title>
         <style>
@@ -592,7 +524,6 @@ export default function App() {
     };
 
     try {
-      // Thử in qua máy in POS trước
       const printRes = await fetch(`${API_URL}/print/bill`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -605,47 +536,31 @@ export default function App() {
       const printData = await printRes.json();
       if (!printRes.ok) throw new Error(printData.error);
     } catch (err) {
-      // Máy in POS lỗi → tự động in qua trình duyệt (không hỏi)
       printBill(currentItems, total, currentTable);
     }
 
-    // 3. Đánh dấu bàn là PAYING (chờ reset thủ công)
     updateTableStatus(currentTable, "PAYING");
   };
 
-  /**
-   * Bước 6: Reset bàn thủ công sau khi khách đã trả tiền xong
-   */
   const resetTable = () => {
     if (!currentTable) return;
     if (!window.confirm(`Reset bàn ${currentTable}? Toàn bộ order sẽ bị xóa.`)) return;
 
-    // Xóa order
     setTableOrders(prev => { const c = { ...prev }; delete c[currentTable]; return c; });
-    // Xóa kitchenSent
     setKitchenSent(prev => { const c = { ...prev }; delete c[currentTable]; return c; });
-    // Xóa ghi chú
     setItemNotes(prev => { const c = { ...prev }; delete c[currentTable]; return c; });
-    // Set bàn về PAID (trống)
     updateTableStatus(currentTable, "PAID");
   };
 
-
-  /**
-   * Chuyển bàn: di chuyển toàn bộ order từ bàn hiện tại sang bàn đích
-   * Điều kiện: bàn đích phải trống (PAID hoặc chưa có trong tableStatus)
-   */
   const transferTable = async (targetTable) => {
     if (!currentTable || currentTable === targetTable) return;
 
-    // Kiểm tra bàn đích
     const targetStatus = tableStatus[targetTable];
     if (targetStatus === "OPEN" || targetStatus === "PAYING") {
       alert(`Bàn ${targetTable} đang có khách, không thể chuyển!`);
       return;
     }
 
-    // Di chuyển order
     setTableOrders(prev => {
       const updated = { ...prev };
       updated[targetTable] = prev[currentTable] || {};
@@ -653,7 +568,6 @@ export default function App() {
       return updated;
     });
 
-    // Di chuyển kitchenSent
     setKitchenSent(prev => {
       const updated = { ...prev };
       updated[targetTable] = prev[currentTable] || {};
@@ -661,7 +575,6 @@ export default function App() {
       return updated;
     });
 
-    // Di chuyển itemNotes
     setItemNotes(prev => {
       const updated = { ...prev };
       updated[targetTable] = prev[currentTable] || {};
@@ -669,7 +582,6 @@ export default function App() {
       return updated;
     });
 
-    // Cập nhật trạng thái: bàn cũ → PAID, bàn mới → OPEN
     await updateTableStatus(currentTable, "PAID");
     await updateTableStatus(targetTable, "OPEN");
     setTableStatus(prev => ({ ...prev, [currentTable]: "PAID", [targetTable]: "OPEN" }));
@@ -677,7 +589,6 @@ export default function App() {
     setShowTransferModal(false);
   };
 
-  // Tách bàn
   const executeSplit = () => {
     if (!splitTarget || splitSelected.length === 0) return;
     const itemsToMove = currentItems.filter(i => splitSelected.includes(i.id));
@@ -699,7 +610,6 @@ export default function App() {
     setSplitModal(false); setSplitSelected([]); setSplitTarget("");
   };
 
-  // Tạm tính
   const printTamTinh = async () => {
     if (!currentTable) return alert("Vui lòng chọn bàn!");
     if (currentItems.length === 0) return alert("Chưa có món nào!");
@@ -776,19 +686,16 @@ export default function App() {
     const num = Number(newTableNum);
     if (!num || num < 1) return showTableMsg("err", "Số bàn không hợp lệ");
 
-    // Kiểm tra bàn đã có trong list chưa (kể cả bàn trong range 1..total chưa dùng)
     if (tableList.some(t => t.table_num === num)) {
       return showTableMsg("err", `Bàn ${num} đã tồn tại`);
     }
 
-    // Lưu bàn mới vào DB
     await fetch(`${API_URL}/tables`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ table_num: num }),
     });
 
-    // Cập nhật total_tables nếu bàn mới vượt quá tổng hiện tại
     const currentTotal = tableList.length;
     if (num > currentTotal) {
       await fetch(`${API_URL}/settings`, {
@@ -824,14 +731,12 @@ export default function App() {
 
   const deleteTable = async (num) => {
     if (!window.confirm(`Xóa Bàn ${num}? Bàn sẽ bị xóa khỏi danh sách.`)) return;
-    // Nếu bàn chưa có trong DB (chưa từng dùng) thì chỉ xóa khỏi settings total_tables
     const inDb = tableList.find(t => t.table_num === num);
     if (inDb) {
       const res  = await fetch(`${API_URL}/tables/${num}`, { method: "DELETE" });
       const data = await res.json();
       if (!res.ok) return showTableMsg("err", data.error);
     }
-    // Giảm total_tables nếu num là bàn cuối, hoặc chỉ ẩn khỏi list local
     setTableList(prev => prev.filter(t => t.table_num !== num));
     showTableMsg("ok", `Đã xóa Bàn ${num}`);
     fetchTableStatus();
@@ -841,7 +746,6 @@ export default function App() {
   // RENDER HELPERS
   // =============================================
 
-  /** Sidebar nav item */
   const NavItem = ({ icon, label, view }) => (
     <div
       onClick={() => setSidebarView(view)}
@@ -849,7 +753,6 @@ export default function App() {
       className={`flex flex-col items-center cursor-pointer p-2 rounded-xl transition w-full
         ${sidebarView === view ? "bg-blue-600 text-white" : `${textSub} hover:bg-slate-700`}`}
     >
-      {/* FA icon – text-base ứng với 16px, vừa vặn sidebar 64px */}
       <span className="text-base">{icon}</span>
     </div>
   );
@@ -929,11 +832,7 @@ export default function App() {
         <NavItem icon={<i className="fa-solid fa-chart-line"/>} label="Thống kê" view="stats"   />
         <NavItem icon={<i className="fa-solid fa-gear"/>}       label="Cài đặt"  view="settings"/>
 
-
-        {/* Dark / Light mode toggle + trạng thái máy in – ở dưới cùng */}
         <div className="mt-auto flex flex-col items-center gap-2">
-
-          {/* Indicator máy in */}
           <div
             title={printerStatus === "online" ? "Máy in: Online" : printerStatus === "offline" ? "Máy in: Offline" : "Đang kiểm tra máy in..."}
             className="flex flex-col items-center gap-1 cursor-default"
@@ -958,15 +857,23 @@ export default function App() {
           >
             {darkMode ? <i className="fa-solid fa-sun"/> : <i className="fa-solid fa-moon"/>}
           </div>
+
+          {/* Nút đăng xuất */}
+          <div
+            onClick={() => { if (window.confirm("Đăng xuất?")) logout(); }}
+            title="Đăng xuất"
+            className={`cursor-pointer p-2 rounded-xl transition ${textSub} hover:bg-red-700 hover:text-white`}
+          >
+            <i className="fa-solid fa-right-from-bracket"/>
+          </div>
         </div>
       </div>
 
-      {/* ==================== TABLE PANEL (chỉ hiện khi order) ==================== */}
+      {/* ==================== TABLE PANEL ==================== */}
       {sidebarView === "order" && (
         <div className={`w-64 ${bgPanel} p-4 overflow-y-auto`}>
           <h2 className="mb-4 font-bold text-lg">BÀN</h2>
 
-          {/* Chú thích màu */}
           <div className="flex gap-3 mb-4 text-xs">
             <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-slate-600 inline-block"/>Trống</span>
             <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-orange-500 inline-block"/>Đang dùng</span>
@@ -984,7 +891,6 @@ export default function App() {
                     ${tableColor(status, currentTable === t)}`}
                 >
                   <div>Bàn {t}</div>
-                  {/* Badge trạng thái */}
                   <div className={`text-xs mt-1 font-normal
                     ${status === "OPEN" ? "text-yellow-200" : "text-slate-400"}`}>
                     {status === "OPEN" ? (qty > 0 ? `${qty} món` : "OPEN") : "Trống"}
@@ -1002,7 +908,6 @@ export default function App() {
         {/* ===== ORDER VIEW ===== */}
         {sidebarView === "order" && (
           <>
-            {/* Filter tabs */}
             <div className="flex gap-2 mb-6 flex-wrap">
               {FILTERS.map(f => (
                 <button key={f.key} onClick={() => setFilter(f.key)}
@@ -1012,7 +917,6 @@ export default function App() {
               ))}
             </div>
 
-            {/* Grid món */}
             <div className="grid grid-cols-4 gap-4 overflow-y-auto">
               {filteredMenu.map(m => {
                 const qty = tableOrders[currentTable]?.[m.id]?.qty || 0;
@@ -1050,7 +954,6 @@ export default function App() {
         {/* ===== MANAGE VIEW ===== */}
         {sidebarView === "manage" && (
           <div className="flex flex-col h-full">
-            {/* Sub-tabs */}
             <div className="flex gap-2 mb-6">
               {[
                 ["add",  <><i className="fa-solid fa-plus mr-2"/>Thêm món</>],
@@ -1065,7 +968,6 @@ export default function App() {
             </div>
 
             {manageTab === "add" ? (
-              /* ---- Form thêm món ---- */
               <div className="max-w-md flex flex-col gap-4">
                 {[
                   { label: "Tên món", key: "name", type: "text", placeholder: "VD: Gà nướng muối ớt" },
@@ -1092,13 +994,11 @@ export default function App() {
                   {file && <img src={URL.createObjectURL(file)} className="mt-3 h-32 w-full object-cover rounded-xl" alt="preview" />}
                 </div>
                 <button onClick={addMenu} className="w-full bg-green-500 hover:bg-green-600 py-3 rounded-xl font-bold transition text-white">
-                  <><i className="fa-solid fa-check mr-2"/>Thêm vào menu</>
+                  <i className="fa-solid fa-check mr-2"/>Thêm vào menu
                 </button>
               </div>
-            ) : (
-              /* ---- Chỉnh sửa / xóa món ---- */
+            ) : manageTab === "edit" ? (
               <div className="flex gap-6 flex-1 overflow-hidden">
-                {/* Danh sách */}
                 <div className="w-72 overflow-y-auto flex flex-col gap-2">
                   {menu.map(m => (
                     <div key={m.id} onClick={() => { setEditItem({ ...m }); setEditFile(null); }}
@@ -1116,7 +1016,6 @@ export default function App() {
                   ))}
                 </div>
 
-                {/* Form edit */}
                 <div className="flex-1 max-w-md">
                   {editItem ? (
                     <div className="flex flex-col gap-4">
@@ -1157,13 +1056,9 @@ export default function App() {
                   )}
                 </div>
               </div>
-            )}
-
-            {/* ---- Tab quản lý bàn ---- */}
-            {manageTab === "table" && (
+            ) : (
+              /* ---- Tab quản lý bàn ---- */
               <div className="flex flex-col gap-5 max-w-lg">
-
-                {/* Thông báo */}
                 {tableMsg && (
                   <div className={`px-4 py-2 rounded-xl text-sm font-semibold
                     ${tableMsg.type === "ok" ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}>
@@ -1171,7 +1066,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* Thêm bàn mới */}
                 <div className={`${bgCard} rounded-2xl p-5`}>
                   <h3 className="font-bold mb-3"><i className="fa-solid fa-plus mr-2 text-green-400"/>Thêm bàn mới</h3>
                   <div className="flex gap-3">
@@ -1189,7 +1083,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Danh sách bàn hiện có */}
                 <div className={`${bgCard} rounded-2xl p-5`}>
                   <h3 className="font-bold mb-3">
                     <i className="fa-solid fa-list mr-2 text-blue-400"/>
@@ -1202,7 +1095,6 @@ export default function App() {
                       {tableList.map(t => (
                         <div key={t.table_num} className={`${darkMode ? "bg-slate-700" : "bg-gray-100"} rounded-xl p-3`}>
                           {editingTable?.table_num === t.table_num ? (
-                            /* Inline edit */
                             <div className="flex flex-col gap-2">
                               <div className="text-xs text-slate-400 mb-1">Đổi số bàn {t.table_num} →</div>
                               <input
@@ -1226,7 +1118,6 @@ export default function App() {
                               </div>
                             </div>
                           ) : (
-                            /* Normal display */
                             <div className="flex items-center justify-between">
                               <div>
                                 <div className="font-bold text-sm">Bàn {t.table_num}</div>
@@ -1261,10 +1152,8 @@ export default function App() {
                     </div>
                   )}
                 </div>
-
               </div>
             )}
-
           </div>
         )}
 
@@ -1279,7 +1168,6 @@ export default function App() {
             </div>
 
             <div className="flex gap-6 flex-1 overflow-hidden">
-              {/* Danh sách bills */}
               <div className="w-80 overflow-y-auto flex flex-col gap-2">
                 {bills.length === 0 ? (
                   <div className={`${textSub} text-center mt-10`}>Không có hóa đơn nào</div>
@@ -1302,17 +1190,13 @@ export default function App() {
                 ))}
               </div>
 
-              {/* Chi tiết bill */}
               <div className="flex-1 overflow-y-auto">
                 {selectedBill ? (
                   <div className="flex flex-col gap-3 max-w-sm">
-
-                    {/* Nút in bill lại */}
                     <button
                       onClick={async () => {
-                        // Helper in qua popup browser
                         const printBillBrowser = (bill) => {
-                          const fmt = (n) => new Intl.NumberFormat("vi-VN").format(n * 1000) + "đ"; // giá lưu dạng k
+                          const fmt = (n) => new Intl.NumberFormat("vi-VN").format(n * 1000) + "đ";
                           const now = new Date(bill.created_at).toLocaleString("vi-VN");
                           const rows = (bill.items || []).map((item, i) => `
                             <tr>
@@ -1333,9 +1217,6 @@ export default function App() {
                               table { width: 100%; border-collapse: collapse; margin: 6px 0; }
                               th { border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 4px 2px; font-size: 12px; }
                               td { padding: 3px 2px; font-size: 12px; vertical-align: top; }
-                              td:nth-child(1) { width: 55%; }
-                              td:nth-child(2) { width: 10%; text-align: center; }
-                              td:nth-child(3) { width: 35%; text-align: right; }
                               .total-row { border-top: 1px dashed #000; margin-top: 6px; padding-top: 6px; display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; }
                               .footer { text-align: center; margin-top: 10px; font-size: 11px; color: #555; }
                               .reprint { text-align: center; font-size: 11px; margin-top: 4px; }
@@ -1361,22 +1242,18 @@ export default function App() {
                         };
 
                         try {
-                          const res = await fetch(`${API_URL}/print/bill/${selectedBill.id}`, {
-                            method: "POST",
-                          });
+                          const res = await fetch(`${API_URL}/print/bill/${selectedBill.id}`, { method: "POST" });
                           const data = await res.json();
                           if (!res.ok) throw new Error(data.error);
                         } catch (err) {
-                          // Máy in POS lỗi → fallback in qua trình duyệt
                           printBillBrowser(selectedBill);
                         }
                       }}
                       className="w-full bg-orange-500 hover:bg-orange-600 py-2.5 rounded-xl font-bold transition text-white text-sm"
                     >
-                      <><i className="fa-solid fa-print mr-2"/>In lại hóa đơn này</>
+                      <i className="fa-solid fa-print mr-2"/>In lại hóa đơn này
                     </button>
 
-                    {/* Nội dung bill */}
                     <div className={`${bgCard} rounded-xl p-6`}>
                       <div className="text-center font-bold mb-4">
                         <div className="text-lg">TIỆM NƯỚNG ĐÀ LẠT VÀ EM</div>
@@ -1397,7 +1274,6 @@ export default function App() {
                         <span className="text-green-400">{formatMoney(selectedBill.total)}</span>
                       </div>
                     </div>
-
                   </div>
                 ) : (
                   <div className={`flex items-center justify-center h-full ${textSub}`}>
@@ -1414,7 +1290,6 @@ export default function App() {
           <div className="flex flex-col gap-6 max-w-lg overflow-y-auto">
             <h2 className="text-xl font-bold"><i className="fa-solid fa-gear mr-2"/>Cài đặt hệ thống</h2>
 
-            {/* ── Thông tin cửa hàng ── */}
             <div className={`${bgCard} rounded-2xl p-5 flex flex-col gap-4`}>
               <h3 className="font-bold text-base"><i className="fa-solid fa-store mr-2 text-orange-400"/>Thông tin cửa hàng</h3>
               {[
@@ -1442,15 +1317,12 @@ export default function App() {
               </div>
             </div>
 
-            {/* ── Cài đặt 3 máy in ── */}
             {[
               { key:"kitchen", label:"Báo chế biến (Bếp)", icon:"fa-fire-burner",    color:"text-orange-400" },
               { key:"tamtinh", label:"Tạm tính",            icon:"fa-file-invoice",   color:"text-yellow-400" },
               { key:"payment", label:"Thanh toán",           icon:"fa-money-bill-wave",color:"text-green-400"  },
             ].map(({ key, label, icon, color }) => (
               <div key={key} className={`${bgCard} rounded-2xl p-5 flex flex-col gap-3`}>
-
-                {/* Header + trạng thái kết nối */}
                 <div className="flex items-center justify-between">
                   <h3 className="font-bold text-base">
                     <i className={`fa-solid ${icon} mr-2 ${color}`}/>{label}
@@ -1467,7 +1339,6 @@ export default function App() {
                   )}
                 </div>
 
-                {/* IP / LAN */}
                 <div>
                   <label className={`block text-xs font-semibold ${textSub} mb-1.5`}>
                     <i className="fa-solid fa-wifi mr-1.5"/>IP / LAN
@@ -1480,7 +1351,6 @@ export default function App() {
                   />
                 </div>
 
-                {/* USB */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className={`text-xs font-semibold ${textSub}`}>
@@ -1525,7 +1395,6 @@ export default function App() {
                   )}
                 </div>
 
-                {/* Nút Kết nối */}
                 <button
                   onClick={() => testPrinterByKey(key)}
                   disabled={testingPrinter[key]}
@@ -1558,10 +1427,9 @@ export default function App() {
                     <i className="fa-solid fa-triangle-exclamation"/>Không kết nối được – xem Log để biết chi tiết
                   </div>
                 )}
-
               </div>
             ))}
-                        {/* ── Nút lưu ── */}
+
             <button
               onClick={saveAllSettings}
               className={`w-full py-3 rounded-xl font-bold text-white transition
@@ -1768,47 +1636,37 @@ export default function App() {
       {showTransferModal && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
           <div className={`${bgPanel} ${text} rounded-2xl p-6 w-96 shadow-2xl`}>
-            {/* Header modal */}
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold">
                 <i className="fa-solid fa-right-left mr-2 text-yellow-400"/>
                 Chuyển bàn {currentTable} sang...
               </h3>
-              <button
-                onClick={() => setShowTransferModal(false)}
-                className="text-slate-400 hover:text-white text-xl font-bold"
-              >✕</button>
+              <button onClick={() => setShowTransferModal(false)} className="text-slate-400 hover:text-white text-xl font-bold">✕</button>
             </div>
 
-            {/* Lưới bàn */}
             <div className="grid grid-cols-5 gap-2 max-h-72 overflow-y-auto">
-              {tables
-                .filter(t => t !== currentTable)
-                .map(t => {
-                  const status = tableStatus[t];
-                  const isOccupied = status === "OPEN" || status === "PAYING";
-                  return (
-                    <button
-                      key={t}
-                      onClick={() => !isOccupied && transferTable(t)}
-                      disabled={isOccupied}
-                      className={`h-12 rounded-xl font-bold text-sm transition
-                        ${isOccupied
-                          ? "bg-slate-700 text-slate-500 cursor-not-allowed opacity-50"
-                          : "bg-green-600 hover:bg-green-500 text-white cursor-pointer"
-                        }`}
-                      title={isOccupied ? `Bàn ${t} đang có khách` : `Chuyển sang bàn ${t}`}
-                    >
-                      {t}
-                      {isOccupied && (
-                        <div className="text-xs font-normal opacity-70">có khách</div>
-                      )}
-                    </button>
-                  );
-                })}
+              {tables.filter(t => t !== currentTable).map(t => {
+                const status = tableStatus[t];
+                const isOccupied = status === "OPEN" || status === "PAYING";
+                return (
+                  <button
+                    key={t}
+                    onClick={() => !isOccupied && transferTable(t)}
+                    disabled={isOccupied}
+                    className={`h-12 rounded-xl font-bold text-sm transition
+                      ${isOccupied
+                        ? "bg-slate-700 text-slate-500 cursor-not-allowed opacity-50"
+                        : "bg-green-600 hover:bg-green-500 text-white cursor-pointer"
+                      }`}
+                    title={isOccupied ? `Bàn ${t} đang có khách` : `Chuyển sang bàn ${t}`}
+                  >
+                    {t}
+                    {isOccupied && <div className="text-xs font-normal opacity-70">có khách</div>}
+                  </button>
+                );
+              })}
             </div>
 
-            {/* Chú thích */}
             <div className="mt-4 flex gap-4 text-xs text-slate-400">
               <span><span className="inline-block w-3 h-3 rounded bg-green-600 mr-1"/>Trống – có thể chuyển</span>
               <span><span className="inline-block w-3 h-3 rounded bg-slate-700 mr-1"/>Có khách – không thể</span>
@@ -1817,11 +1675,10 @@ export default function App() {
         </div>
       )}
 
-      {/* ==================== ORDER PANEL (chỉ hiện khi order) ==================== */}
+      {/* ==================== ORDER PANEL ==================== */}
       {sidebarView === "order" && (
         <div className={`w-80 ${bgSide} p-4 flex flex-col`}>
 
-          {/* Header: tên bàn + trạng thái */}
           <div className="mb-3">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold">ORDER</h2>
@@ -1861,18 +1718,16 @@ export default function App() {
             </div>
           </div>
 
-          {/* Danh sách món đã order */}
           <div className="flex-1 overflow-y-auto flex flex-col gap-1 mb-3">
             {currentItems.length === 0 ? (
               <div className={`${textSub} text-center py-8 text-sm`}>Chưa có món nào</div>
             ) : currentItems.map((item) => {
               const sentQty = kitchenSent[currentTable]?.[item.id] || 0;
-              const newQty  = item.qty - sentQty;  // số lượng chưa gửi bếp
+              const newQty  = item.qty - sentQty;
               const note    = itemNotes[currentTable]?.[item.id] || "";
 
               return (
                 <div key={item.id} className={`${bgCard} rounded-xl p-3`}>
-                  {/* Tên + badge mới + tổng tiền */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
                       <span className="font-medium text-sm">{item.name}</span>
@@ -1887,7 +1742,6 @@ export default function App() {
                     </span>
                   </div>
 
-                  {/* Nút tăng giảm */}
                   <div className="flex items-center justify-between mt-2">
                     <div className="flex items-center gap-2 bg-slate-700 rounded-lg px-1 py-0.5">
                       <button
@@ -1911,7 +1765,6 @@ export default function App() {
                     <span className={`text-xs ${textSub}`}>{formatMoney(item.price)}/món</span>
                   </div>
 
-                  {/* Ghi chú */}
                   <input
                     type="text"
                     value={note}
@@ -1929,7 +1782,6 @@ export default function App() {
             })}
           </div>
 
-          {/* ===== 3 nút hành động ===== */}
           <div className={`border-t ${darkMode ? "border-slate-600" : "border-gray-300"} pt-3 flex flex-col gap-2`}>
 
             <div className="flex justify-between text-base font-bold mb-1">
@@ -1937,7 +1789,6 @@ export default function App() {
               <span className="text-green-400">{formatMoney(total)}</span>
             </div>
 
-            {/* Bước 2: In phiếu bếp – IN ĐƯỢC BẤT KỲ LÚC NÀO khi có món */}
             <button
               onClick={printKitchenTicket}
               disabled={currentItems.length === 0}
@@ -1946,10 +1797,9 @@ export default function App() {
                   ? "bg-orange-500 hover:bg-orange-600"
                   : "bg-slate-600 opacity-50 cursor-not-allowed"}`}
             >
-              <><i className="fa-solid fa-fire-burner mr-2"/>In phiếu bếp</>
+              <i className="fa-solid fa-fire-burner mr-2"/>In phiếu bếp
             </button>
 
-            {/* Tạm tính */}
             <button
               onClick={printTamTinh}
               disabled={currentItems.length === 0}
@@ -1959,7 +1809,6 @@ export default function App() {
               <i className="fa-solid fa-file-invoice mr-2"/>Tạm tính
             </button>
 
-            {/* Bước 4+5: Thanh toán & in hóa đơn tài chính */}
             <button
               onClick={handlePayment}
               disabled={currentItems.length === 0 || tableStatus[currentTable] === "PAYING"}
@@ -1968,10 +1817,9 @@ export default function App() {
                   ? "bg-blue-500 hover:bg-blue-600"
                   : "bg-slate-600 opacity-50 cursor-not-allowed"}`}
             >
-              <><i className="fa-solid fa-money-bill-wave mr-2"/>Thanh toán & In HĐ</>
+              <i className="fa-solid fa-money-bill-wave mr-2"/>Thanh toán & In HĐ
             </button>
 
-            {/* Bước 6: Reset bàn – chỉ active sau khi đã thanh toán */}
             <button
               onClick={resetTable}
               disabled={tableStatus[currentTable] !== "PAYING"}
@@ -1980,7 +1828,7 @@ export default function App() {
                   ? "bg-red-500 hover:bg-red-600 text-white"
                   : "bg-slate-600 opacity-50 cursor-not-allowed text-slate-400"}`}
             >
-              <><i className="fa-solid fa-rotate mr-2"/>Reset bàn</>
+              <i className="fa-solid fa-rotate mr-2"/>Reset bàn
             </button>
 
           </div>
@@ -1989,4 +1837,16 @@ export default function App() {
 
     </div>
   );
+}
+
+// =============================================
+// ROOT COMPONENT – auth guard here, NOT in AppInner
+// =============================================
+export default function App() {
+  const { user, ready } = useAuth();
+
+  if (!ready) return null;
+  if (!user) return <LoginScreen />;
+
+  return <AppInner />;
 }
