@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import "./App.css";
+import { useAuth } from './AuthContext';
+import LoginScreen from './LoginScreen';
 
 // =============================================
 // CONSTANTS
@@ -106,6 +108,9 @@ const tableColor = (status, isSelected) => {
 // MAIN COMPONENT
 // =============================================
 export default function App() {
+  const { user, logout, ready } = useAuth();
+  if (!ready) return null;
+  if (!user) return <LoginScreen />;
 
   // ----- CORE STATE -----
   const [menu, setMenu]               = useState([]);
