@@ -73,7 +73,10 @@ const calcTotal    = (td = {}) => Object.values(td).reduce((s, i) => s + i.price
 const calcTotalQty = (td = {}) => Object.values(td).reduce((s, i) => s + i.qty, 0);
 
 function AppInner() {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const role = user?.role || "waiter"; // "admin" | "cashier" | "waiter"
+  const canPay     = role === "admin" || role === "cashier"; // thanh toán & tạm tính
+  const canManage  = role === "admin" || role === "cashier"; // quản lý món
 
   const [menu, setMenu]                 = useState([]);
   const [currentTable, setCurrentTable] = useState(null);
@@ -290,9 +293,10 @@ function AppInner() {
       <div className={`border-t ${darkMode?"border-slate-600":"border-gray-300"} pt-3 flex flex-col gap-2`}>
         <div className="flex justify-between font-bold mb-1"><span>Total:</span><span className="text-green-400">{formatMoney(total)}</span></div>
         <button onClick={printKitchenTicket} disabled={currentItems.length===0} className={`w-full py-2.5 rounded-xl font-bold transition text-white text-sm ${currentItems.length>0?"bg-orange-500 hover:bg-orange-600":"bg-slate-600 opacity-50 cursor-not-allowed"}`}><i className="fa-solid fa-fire-burner mr-2"/>In phiếu bếp</button>
-        <button onClick={printTamTinh} disabled={currentItems.length===0} className={`w-full py-2.5 rounded-xl font-bold transition text-white text-sm ${currentItems.length>0?"bg-yellow-500 hover:bg-yellow-600":"bg-slate-600 opacity-50 cursor-not-allowed"}`}><i className="fa-solid fa-file-invoice mr-2"/>Tạm tính</button>
-        <button onClick={handlePayment} disabled={currentItems.length===0||tableStatus[currentTable]==="PAYING"} className={`w-full py-2.5 rounded-xl font-bold transition text-white text-sm ${currentItems.length>0&&tableStatus[currentTable]!=="PAYING"?"bg-blue-500 hover:bg-blue-600":"bg-slate-600 opacity-50 cursor-not-allowed"}`}><i className="fa-solid fa-money-bill-wave mr-2"/>Thanh toán & In HĐ</button>
-        <button onClick={resetTable} disabled={tableStatus[currentTable]!=="PAYING"} className={`w-full py-2.5 rounded-xl font-bold transition text-sm ${tableStatus[currentTable]==="PAYING"?"bg-red-500 hover:bg-red-600 text-white":"bg-slate-600 opacity-50 cursor-not-allowed text-slate-400"}`}><i className="fa-solid fa-rotate mr-2"/>Reset bàn</button>
+        {canPay&&<button onClick={printTamTinh} disabled={currentItems.length===0} className={`w-full py-2.5 rounded-xl font-bold transition text-white text-sm ${currentItems.length>0?"bg-yellow-500 hover:bg-yellow-600":"bg-slate-600 opacity-50 cursor-not-allowed"}`}><i className="fa-solid fa-file-invoice mr-2"/>Tạm tính</button>}
+        {canPay&&<button onClick={handlePayment} disabled={currentItems.length===0||tableStatus[currentTable]==="PAYING"} className={`w-full py-2.5 rounded-xl font-bold transition text-white text-sm ${currentItems.length>0&&tableStatus[currentTable]!=="PAYING"?"bg-blue-500 hover:bg-blue-600":"bg-slate-600 opacity-50 cursor-not-allowed"}`}><i className="fa-solid fa-money-bill-wave mr-2"/>Thanh toán & In HĐ</button>}
+        {canPay&&<button onClick={resetTable} disabled={tableStatus[currentTable]!=="PAYING"} className={`w-full py-2.5 rounded-xl font-bold transition text-sm ${tableStatus[currentTable]==="PAYING"?"bg-red-500 hover:bg-red-600 text-white":"bg-slate-600 opacity-50 cursor-not-allowed text-slate-400"}`}><i className="fa-solid fa-rotate mr-2"/>Reset bàn</button>}
+        {!canPay&&<div className={`text-xs text-center py-2 ${textSub}`}><i className="fa-solid fa-lock mr-1"/>Nhân viên order không có quyền thanh toán</div>}
       </div>
     </div>
   );
@@ -311,11 +315,14 @@ function AppInner() {
     </div>
   );
 
+  const FilterBar = () => (
+    <div className="flex gap-1.5 mb-3 flex-wrap flex-shrink-0">
+      {FILTERS.map(f=><button key={f.key} onClick={()=>setFilter(f.key)} className={`px-3 py-1.5 rounded-full text-xs transition font-semibold whitespace-nowrap ${filter===f.key?"bg-blue-500 text-white":`${bgCard} ${textSub} hover:bg-slate-600`}`}>{f.label}</button>)}
+    </div>
+  );
+
   const MenuGrid = () => (
     <>
-      <div className="flex gap-1.5 mb-3 flex-wrap">
-        {FILTERS.map(f=><button key={f.key} onClick={()=>setFilter(f.key)} className={`px-3 py-1.5 rounded-full text-xs transition font-semibold whitespace-nowrap ${filter===f.key?"bg-blue-500 text-white":`${bgCard} ${textSub} hover:bg-slate-600`}`}>{f.label}</button>)}
-      </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
         {filteredMenu.map(m=>{
           const qty=tableOrders[currentTable]?.[m.id]?.qty||0;
@@ -552,10 +559,10 @@ function AppInner() {
         <div className={`w-16 ${bgSide} flex flex-col items-center py-4 gap-2 flex-shrink-0`}>
           <div className="text-2xl mb-2 text-orange-400"><i className="fa-solid fa-fire-flame-curved"/></div>
           <NavItem icon={<i className="fa-solid fa-table-cells-large"/>} label="Order" view="order"/>
-          <NavItem icon={<i className="fa-solid fa-utensils"/>} label="Quản lý món" view="manage"/>
-          <NavItem icon={<i className="fa-solid fa-clock-rotate-left"/>} label="Lịch sử" view="history"/>
-          <NavItem icon={<i className="fa-solid fa-chart-line"/>} label="Thống kê" view="stats"/>
-          <NavItem icon={<i className="fa-solid fa-gear"/>} label="Cài đặt" view="settings"/>
+          {canManage&&<NavItem icon={<i className="fa-solid fa-utensils"/>} label="Quản lý món" view="manage"/>}
+          {canPay&&<NavItem icon={<i className="fa-solid fa-clock-rotate-left"/>} label="Lịch sử" view="history"/>}
+          {canPay&&<NavItem icon={<i className="fa-solid fa-chart-line"/>} label="Thống kê" view="stats"/>}
+          {role==="admin"&&<NavItem icon={<i className="fa-solid fa-gear"/>} label="Cài đặt" view="settings"/>}
           <div className="mt-auto flex flex-col items-center gap-2">
             <div title={printerStatus==="online"?"Online":printerStatus==="offline"?"Offline":"Kiểm tra..."} className="flex flex-col items-center gap-1">
               <span className="text-lg"><i className="fa-solid fa-print"/></span>
@@ -577,7 +584,7 @@ function AppInner() {
 
         {/* Main content */}
         <div className="flex-1 p-5 flex flex-col overflow-hidden min-w-0">
-          {sidebarView==="order"&&(<><div className="flex gap-2 mb-4 flex-wrap flex-shrink-0">{FILTERS.map(f=><button key={f.key} onClick={()=>setFilter(f.key)} className={`px-3 py-1.5 rounded-full text-xs transition font-semibold whitespace-nowrap ${filter===f.key?"bg-blue-500 text-white":`${bgCard} ${textSub} hover:bg-slate-600`}`}>{f.label}</button>)}</div><div className="flex-1 overflow-y-auto"><MenuGrid/></div></>)}
+          {sidebarView==="order"&&(<><FilterBar/><div className="flex-1 overflow-y-auto"><MenuGrid/></div></>)}
           {sidebarView==="manage"&&<ManageView/>}
           {sidebarView==="history"&&<HistoryView/>}
           {sidebarView==="stats"&&<StatsView/>}
@@ -635,6 +642,7 @@ function AppInner() {
                   </div>
                 : <div className="mb-3 px-3 py-2 rounded-xl bg-yellow-500/20 border border-yellow-500/40 text-yellow-400 text-sm">⚠️ Chưa chọn bàn — <button onClick={()=>setMobileTab("tables")} className="underline font-semibold">chọn bàn</button></div>
               }
+              <FilterBar/>
               <MenuGrid/>
             </div>
           )}
@@ -674,13 +682,13 @@ function AppInner() {
         <div className={`${bgSide} border-t ${darkMode?"border-slate-700":"border-gray-300"} flex-shrink-0 safe-bottom`}>
           <div className="flex">
             {[
-              {tab:"tables", icon:"fa-table-cells-large", label:"Bàn"},
-              {tab:"menu",   icon:"fa-utensils",           label:"Thực đơn"},
-              {tab:"order",  icon:"fa-receipt",            label:"Order"},
-              {tab:"history",icon:"fa-clock-rotate-left",  label:"Lịch sử"},
-              {tab:"stats",  icon:"fa-chart-line",         label:"Thống kê"},
-              {tab:"manage", icon:"fa-gear",               label:"Quản lý"},
-            ].map(({tab,icon,label})=>{
+              {tab:"tables", icon:"fa-table-cells-large", label:"Bàn",       show:true},
+              {tab:"menu",   icon:"fa-utensils",           label:"Thực đơn",  show:true},
+              {tab:"order",  icon:"fa-receipt",            label:"Order",     show:true},
+              {tab:"history",icon:"fa-clock-rotate-left",  label:"Lịch sử",   show:canPay},
+              {tab:"stats",  icon:"fa-chart-line",         label:"Thống kê",  show:canPay},
+              {tab:"manage", icon:"fa-gear",               label:"Quản lý",   show:canManage},
+            ].filter(t=>t.show).map(({tab,icon,label})=>{
               const isActive=mobileTab===tab;
               const badge=tab==="order"?currentItems.reduce((s,i)=>s+i.qty,0):0;
               return(
