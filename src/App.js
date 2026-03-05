@@ -4,7 +4,7 @@ import "./App.css";
 import { useAuth } from "./AuthContext";
 import LoginScreen from "./LoginScreen";
 
-import { API_URL, filterMenu, calcTotal, TOTAL_TABLES } from "./constants";
+// import { API_URL, filterMenu, calcTotal, TOTAL_TABLES } from "./constants";
 import { useMenu }     from "./hooks/useMenu";
 import { useTables }   from "./hooks/useTables";
 import { useBills }    from "./hooks/useBills";
@@ -80,7 +80,7 @@ function AppInner() {
   // ── Derived ───────────────────────────────────────────────────────────────
   const tables      = tableList.length > 0 ? tableList.map(t => t.table_num) : Array.from({ length: TOTAL_TABLES }, (_, i) => i + 1);
   const currentItems = Object.values(tableOrders[currentTable] || {});
-  const total        = calcTotal(tableOrders[currentTable]);
+  // const total        = calcTotal(tableOrders[currentTable]);
   const filteredMenu = filterMenu(menu, filter);
 
   // ── Effects ───────────────────────────────────────────────────────────────
