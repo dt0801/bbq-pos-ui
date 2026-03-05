@@ -39,7 +39,7 @@ export default function LoginScreen() {
           <h1 style={{ color: "#fff", fontSize: 22, margin: "8px 0 4px", fontWeight: 700 }}>
             BBQ POS
           </h1>
-          <p style={{ color: "#888", fontSize: 13, margin: 0 }}>Tiệm Nướng Đà Lạt Và Em</p>
+          <p style={{ color: "#888", fontSize: 13, margin: 0 }}></p>
         </div>
 
         {/* Form */}
