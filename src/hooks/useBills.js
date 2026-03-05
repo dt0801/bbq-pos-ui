@@ -32,14 +32,17 @@ export function useBills(settings, apiFetch) {
   const printKitchenTicket = async ({ currentTable, currentItems, itemNotes, setKitchenSent }) => {
     if (!currentTable || currentItems.length === 0) return alert("Chưa có món!");
     const notes = itemNotes[currentTable] || {};
+    // Chỉ in FOOD và COMBO — bỏ DRINK
+    const kitchenItems = currentItems.filter(i => i.type !== "DRINK");
+    if (kitchenItems.length === 0) return alert("Không có món bếp (chỉ có đồ uống)!");
     const browserPrint = () => {
       const win = window.open("","_blank","width=500,height=600");
-      win.document.write(`<html><head><title>Phiếu Bếp</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:monospace;font-size:15px;padding:20px}h2{text-align:center;font-size:20px;margin-bottom:4px}.sub{text-align:center;color:#666;font-size:13px;margin-bottom:14px}hr{border:1px dashed #999;margin:8px 0}.row{display:flex;justify-content:space-between;margin:8px 0;font-size:16px}.qty{font-weight:bold;font-size:20px}.note{font-size:12px;color:#c00;margin-left:16px}.footer{text-align:center;margin-top:14px;font-size:12px;color:#666}</style></head><body><h2>🍳 PHIẾU BẾP</h2><div class="sub">Bàn ${currentTable} | ${new Date().toLocaleTimeString("vi-VN")}</div><hr/>${currentItems.map(i=>`<div class="row"><span>${i.name}</span><span class="qty">x${i.qty}</span></div>${notes[i.id]?`<div class="note">📝 ${notes[i.id]}</div>`:""}`).join("")}<hr/><div class="footer">Giao bếp lúc ${new Date().toLocaleTimeString("vi-VN")}</div></body></html>`);
+      win.document.write(`<html><head><title>Phiếu Bếp</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:monospace;font-size:15px;padding:20px}h2{text-align:center;font-size:20px;margin-bottom:4px}.sub{text-align:center;color:#666;font-size:13px;margin-bottom:14px}hr{border:1px dashed #999;margin:8px 0}.row{display:flex;justify-content:space-between;margin:8px 0;font-size:16px}.qty{font-weight:bold;font-size:20px}.note{font-size:12px;color:#c00;margin-left:16px}.footer{text-align:center;margin-top:14px;font-size:12px;color:#666}</style></head><body><h2>🍳 PHIẾU BẾP</h2><div class="sub">Bàn ${currentTable} | ${new Date().toLocaleTimeString("vi-VN")}</div><hr/>${kitchenItems.map(i=>`<div class="row"><span>${i.name}</span><span class="qty">x${i.qty}</span></div>${notes[i.id]?`<div class="note">📝 ${notes[i.id]}</div>`:""}`).join("")}<hr/><div class="footer">Giao bếp lúc ${new Date().toLocaleTimeString("vi-VN")}</div></body></html>`);
       win.document.close(); win.focus();
       setTimeout(() => { win.print(); win.close(); }, 300);
     };
     try {
-      const res = await apiFetch(`${API_URL}/print/kitchen`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ table_num:currentTable, items:currentItems.map(i=>({name:i.name,price:i.price,qty:i.qty,note:notes[i.id]||""})) }) });
+      const res = await apiFetch(`${API_URL}/print/kitchen`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ table_num:currentTable, items:kitchenItems.map(i=>({name:i.name,price:i.price,qty:i.qty,note:notes[i.id]||""})) }) });
       if (!res.ok) throw new Error();
     } catch { browserPrint(); }
     setKitchenSent(p => ({ ...p, [currentTable]: Object.fromEntries(currentItems.map(i=>[i.id,i.qty])) }));
