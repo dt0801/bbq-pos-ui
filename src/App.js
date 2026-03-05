@@ -72,7 +72,7 @@ function AppInner() {
   const staffHook    = useStaff(getToken);
 
   const { menu, fetchMenu, newItem, setNewItem, file, setFile, editItem, setEditItem, editFile, setEditFile, addMenu, updateMenu, deleteMenu } = menuHook;
-  const { tableList, tableStatus, tableOrders, currentTable, setCurrentTable, kitchenSent, setKitchenSent, itemNotes, setItemNotes, newTableNum, setNewTableNum, editingTable, setEditingTable, tableMsg, fetchTableStatus, fetchTableList, updateTableStatus, addItem, updateQty, transferTable, executeSplit, resetTable, addTable, renameTable, deleteTable } = tablesHook;
+  const { tableList, tableStatus, tableOrders, currentTable, setCurrentTable, kitchenSent, setKitchenSent, itemNotes, setItemNotes, newTableNum, setNewTableNum, editingTable, setEditingTable, tableMsg, fetchTableStatus, fetchTableList, updateTableStatus, addItem, updateQty, saveOrders, transferTable, executeSplit, resetTable, addTable, renameTable, deleteTable } = tablesHook;
   const { bills, selectedBill, setSelectedBill, historyDate, setHistoryDate, printerStatus, fetchBills, fetchBillDetail, printKitchenTicket, handlePayment, printTamTinh, reprintBill } = billsHook;
   const { statsToday, statsMonthlyData, statsYearlyData, statsTab, setStatsTab, statsMonth, setStatsMonth, statsYear, setStatsYear, fetchStatsMonthly, fetchStatsDaily, fetchStatsYearly, fetchAllStats } = statsHook;
   const { staffList, staffForm, setStaffForm, staffEditing, staffShowForm, setStaffShowForm, staffError, fetchStaff, openCreateStaff, openEditStaff, submitStaff, deleteStaff } = staffHook;
