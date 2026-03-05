@@ -4,7 +4,7 @@ import "./App.css";
 import { useAuth } from "./AuthContext";
 import LoginScreen from "./LoginScreen";
 
-// import { API_URL, filterMenu, calcTotal, TOTAL_TABLES } from "./constants";
+import { API_URL, filterMenu, calcTotal, TOTAL_TABLES } from "./constants";
 import { useMenu }     from "./hooks/useMenu";
 import { useTables }   from "./hooks/useTables";
 import { useBills }    from "./hooks/useBills";
