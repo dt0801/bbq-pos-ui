@@ -64,8 +64,8 @@ function AppInner() {
 
   // ── Hooks ─────────────────────────────────────────────────────────────────
   const menuHook     = useMenu(apiFetch);
-  const tablesHook   = useTables();
-  const settingsHook = useSettings();
+  const tablesHook   = useTables(apiFetch);
+  const settingsHook = useSettings(apiFetch);
   const billsHook    = useBills(settingsHook.settings);
   const statsHook    = useStats();
   const staffHook    = useStaff(getToken);

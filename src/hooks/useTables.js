@@ -2,7 +2,7 @@
 import { useState, useCallback } from "react";
 import { API_URL } from "../constants";
 
-export function useTables() {
+export function useTables(apiFetch) {
   const [tableList,    setTableList]    = useState([]);
   const [tableStatus,  setTableStatus]  = useState({});
   const [tableOrders,  setTableOrders]  = useState({});
@@ -43,7 +43,7 @@ export function useTables() {
   // ── Cập nhật trạng thái bàn ───────────────────────────────────────────────
   const updateTableStatus = async (num, status) => {
     setTableStatus(p => ({ ...p, [num]: status }));
-    await fetch(`${API_URL}/tables/${num}/status`, {
+    await apiFetch(`${API_URL}/tables/${num}/status`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
@@ -126,9 +126,9 @@ export function useTables() {
     const num = Number(newTableNum);
     if (!num || num < 1)                            return showTableMsg("err", "Số bàn không hợp lệ");
     if (tableList.some(t => t.table_num === num))   return showTableMsg("err", `Bàn ${num} đã tồn tại`);
-    await fetch(`${API_URL}/tables`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ table_num: num }) });
+    await apiFetch(`${API_URL}/tables`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ table_num: num }) });
     if (num > tableList.length)
-      await fetch(`${API_URL}/settings`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ key:"total_tables", value:String(num) }) });
+      await apiFetch(`${API_URL}/settings`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ key:"total_tables", value:String(num) }) });
     setNewTableNum("");
     showTableMsg("ok", `Đã thêm Bàn ${num}`);
     fetchTableList(); fetchTableStatus();
@@ -139,7 +139,7 @@ export function useTables() {
     const { table_num, new_num } = editingTable;
     if (!new_num || Number(new_num) < 1) return showTableMsg("err", "Số bàn không hợp lệ");
     if (Number(new_num) === table_num)   { setEditingTable(null); return; }
-    const res = await fetch(`${API_URL}/tables/${table_num}`, { method:"PUT", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ new_num: Number(new_num) }) });
+    const res = await apiFetch(`${API_URL}/tables/${table_num}`, { method:"PUT", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ new_num: Number(new_num) }) });
     const d   = await res.json();
     if (!res.ok) return showTableMsg("err", d.error);
     setEditingTable(null);
@@ -151,7 +151,7 @@ export function useTables() {
     if (!window.confirm(`Xóa Bàn ${num}?`)) return;
     const inDb = tableList.find(t => t.table_num === num);
     if (inDb) {
-      const res = await fetch(`${API_URL}/tables/${num}`, { method:"DELETE" });
+      const res = await apiFetch(`${API_URL}/tables/${num}`, { method:"DELETE" });
       const d   = await res.json();
       if (!res.ok) return showTableMsg("err", d.error);
     }
