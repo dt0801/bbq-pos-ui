@@ -5,23 +5,20 @@ export const TOTAL_TABLES = 20;
 export const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
 export const FILTERS = [
-  { key: "ALL",     label: "Tất cả"   },
-  { key: "COMBO",   label: "Combo"    },
-  { key: "KHAI_VI", label: "Khai vị"  },
-  { key: "SIGNATURE",label:"Signature"},
-  { key: "NHAU",    label: "Nhậu"     },
-  { key: "GA",      label: "Gà"       },
-  { key: "BO",      label: "Bò"       },
-  { key: "HEO",     label: "Heo/Nai"  },
-  { key: "ECH",     label: "Ếch"      },
-  { key: "CA",      label: "Cá"       },
-  { key: "LUON",    label: "Lươn"     },
-  { key: "SO_DIEP", label: "Sò điệp"  },
-  { key: "HAISAN",  label: "Hải sản"  },
-  { key: "RAU",     label: "Rau xào"  },
-  { key: "LAU",     label: "Lẩu"      },
-  { key: "COM_MI",  label: "Cơm - Mì" },
-  { key: "DRINK",   label: "Đồ uống"  },
+  { key: "ALL",      label: "Tất cả"     },
+  { key: "COMBO",    label: "Combo"      },
+  { key: "DUMPLING", label: "Dimsum"     },
+  { key: "TAPAS",    label: "Tapas"      },
+  { key: "SALAD",    label: "Salad"      },
+  { key: "SOUP",     label: "Soup"       },
+  { key: "SUSHI",    label: "Sushi"      },
+  { key: "SASHIMI",  label: "Sashimi"    },
+  { key: "RAMEN",    label: "Ramen"      },
+  { key: "RICE",     label: "Cơm - Mì"   },
+  { key: "DESSERT",  label: "Tráng miệng" },
+  { key: "KIDS",     label: "Trẻ em"    },
+  { key: "EXTRA",    label: "Thêm"       },
+  { key: "DRINK",    label: "Đồ uống"   },
 ];
 
 // ─── Format tiền VND ─────────────────────────────────────────────────────────
@@ -46,31 +43,26 @@ export const removeTones = (str) => {
 // ─── Lọc menu theo danh mục ──────────────────────────────────────────────────
 export const filterMenu = (menu, filter) => {
   if (filter === "ALL") return menu;
-  const r   = (m) => removeTones(m.name);
-  const has = (m, ...keys) => keys.some((k) => r(m).includes(removeTones(k)));
-  const not = (m, ...keys) => !keys.some((k) => r(m).includes(removeTones(k)));
+  const r   = (m) => removeTones(m.name).toLowerCase();
+  const has = (m, ...keys) => keys.some((k) => r(m).includes(removeTones(k).toLowerCase()));
   const map = {
     COMBO:    (m) => m.type === "COMBO",
     DRINK:    (m) => m.type === "DRINK",
-    KHAI_VI:  (m) => has(m, "xuc xich","khoai tay","salad"),
-    SIGNATURE:(m) => has(m, "oc nhoi","heo moi","nai xao","nai xong","dat vang","tieu xanh"),
-    NHAU:     (m) => has(m, "sun ga chien","chan ga chien","canh ga chien","ech chien gion","ca trung chien"),
-    GA:       (m) => has(m, "ga")  && not(m, "chien man","sun ga","ca trum","ra lau"),
-    BO:       (m) => has(m, "bo")  && not(m, "bun bo","ra bo"),
-    HEO:      (m) => has(m, "heo","nai","suon heo"),
-    ECH:      (m) => has(m, "ech"),
-    CA:       (m) => has(m, "ca trung nuong","ca tam nuong"),
-    LUON:     (m) => has(m, "luon ngong"),
-    SO_DIEP:  (m) => has(m, "so diep"),
-    HAISAN:   (m) => has(m, "tom","muc","bach tuoc"),
-    RAU:      (m) => has(m, "rau muong","rau cu xao","rau rung","mang tay xao"),
-    LAU:      (m) => has(m, "lau","dia lau","nam kim cham","mi goi","rau lau") && not(m,"ca tau mang"),
-    COM_MI:   (m) => has(m, "com chien","mi xao","com lam"),
+    DUMPLING: (m) => has(m, "gyoza","dumpling","ha cao","bao bun","wonton"),
+    TAPAS:    (m) => has(m, "prawn","rolls","stick","edamame","chicken","avocado","veggie rolls","panko","summer","sommerrolle","ha noi"),
+    SALAD:    (m) => has(m, "salat","salad","seetang","gurken","wakame","mango salat"),
+    SOUP:     (m) => has(m, "ramen","soup","tom yum") && !has(m,"miso ramen","tonkotsu","spicy ramen"),
+    SUSHI:    (m) => has(m, "roll","nigiri","maki") && !has(m,"sashimi"),
+    SASHIMI:  (m) => has(m, "sashimi","tataki","tatar"),
+    RAMEN:    (m) => has(m, "ramen"),
+    RICE:     (m) => has(m, "fried rice","pad thai","udon","nudeln"),
+    DESSERT:  (m) => has(m, "mochi","banana","tiramisu","souffle","pagoda","affogato","eis"),
+    KIDS:     (m) => has(m, "kids","kid","snack for kids","happy kids","popcorn"),
+    EXTRA:    (m) => has(m, "extra","sauce"),
   };
   const fn = map[filter];
   return fn ? menu.filter(fn) : menu;
 };
-
 // ─── Tính tổng tiền / tổng số lượng ─────────────────────────────────────────
 export const calcTotal    = (td = {}) => Object.values(td).reduce((s,i) => s + i.price * i.qty, 0);
 export const calcTotalQty = (td = {}) => Object.values(td).reduce((s,i) => s + i.qty, 0);
