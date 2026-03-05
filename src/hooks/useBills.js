@@ -2,7 +2,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { API_URL } from "../constants";
 
-export function useBills(settings) {
+export function useBills(settings, apiFetch) {
   const [bills,        setBills]        = useState([]);
   const [selectedBill, setSelectedBill] = useState(null);
   const [historyDate,  setHistoryDate]  = useState(new Date().toISOString().split("T")[0]);
@@ -19,12 +19,13 @@ export function useBills(settings) {
   }, []);
 
   const fetchBills = useCallback((date) => {
-    fetch(`${API_URL}/bills?date=${date}`).then(r => r.json()).then(setBills).catch(() => {});
-  }, []);
+    apiFetch(`${API_URL}/bills?date=${date}`).then(r => r&&r.json()).then(d=>d&&setBills(d)).catch(() => {});
+  }, []); // eslint-disable-line
 
   const fetchBillDetail = async (id) => {
-    const d = await fetch(`${API_URL}/bills/${id}`).then(r => r.json());
-    setSelectedBill(d);
+    const r = await apiFetch(`${API_URL}/bills/${id}`);
+    const d = r && await r.json();
+    if (d) setSelectedBill(d);
   };
 
   // ── In phiếu bếp ──────────────────────────────────────────────────────────
@@ -38,7 +39,7 @@ export function useBills(settings) {
       setTimeout(() => { win.print(); win.close(); }, 300);
     };
     try {
-      const res = await fetch(`${API_URL}/print/kitchen`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ table_num:currentTable, items:currentItems.map(i=>({name:i.name,price:i.price,qty:i.qty,note:notes[i.id]||""})) }) });
+      const res = await apiFetch(`${API_URL}/print/kitchen`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ table_num:currentTable, items:currentItems.map(i=>({name:i.name,price:i.price,qty:i.qty,note:notes[i.id]||""})) }) });
       if (!res.ok) throw new Error();
     } catch { browserPrint(); }
     setKitchenSent(p => ({ ...p, [currentTable]: Object.fromEntries(currentItems.map(i=>[i.id,i.qty])) }));
@@ -47,7 +48,7 @@ export function useBills(settings) {
   // ── Thanh toán & in hóa đơn ───────────────────────────────────────────────
   const handlePayment = async ({ currentTable, currentItems, total, updateTableStatus }) => {
     if (!currentTable || currentItems.length === 0) return alert("Bàn chưa có món!");
-    await fetch(`${API_URL}/bills`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ table_num:currentTable, total, items:currentItems.map(i=>({name:i.name,price:i.price,qty:i.qty})) }) });
+    await apiFetch(`${API_URL}/bills`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ table_num:currentTable, total, items:currentItems.map(i=>({name:i.name,price:i.price,qty:i.qty})) }) });
     const fmt = n => new Intl.NumberFormat("vi-VN").format(n*1000)+"đ";
     const browserPrint = () => {
       const win = window.open("","_blank","width=794,height=900");
@@ -56,7 +57,7 @@ export function useBills(settings) {
       setTimeout(() => { win.print(); win.close(); }, 300);
     };
     try {
-      const r = await fetch(`${API_URL}/print/bill`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ table_num:currentTable, total, items:currentItems.map(i=>({name:i.name,price:i.price,qty:i.qty})) }) });
+      const r = await apiFetch(`${API_URL}/print/bill`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ table_num:currentTable, total, items:currentItems.map(i=>({name:i.name,price:i.price,qty:i.qty})) }) });
       if (!r.ok) throw new Error();
     } catch { browserPrint(); }
     updateTableStatus(currentTable, "PAYING");
@@ -67,7 +68,7 @@ export function useBills(settings) {
     if (!currentTable || currentItems.length === 0) return alert("Chưa có món!");
     const tot = currentItems.reduce((s,i) => s + i.price * i.qty, 0);
     try {
-      const r = await fetch(`${API_URL}/print/tamtinh`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ table_num:currentTable, items:currentItems.map(i=>({name:i.name,price:i.price,qty:i.qty})), total:tot }) });
+      const r = await apiFetch(`${API_URL}/print/tamtinh`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ table_num:currentTable, items:currentItems.map(i=>({name:i.name,price:i.price,qty:i.qty})), total:tot }) });
       if (!r.ok) throw new Error();
     } catch {
       const fmt = n => new Intl.NumberFormat("vi-VN").format(n)+"đ";
@@ -88,7 +89,7 @@ export function useBills(settings) {
       setTimeout(() => { win.print(); win.close(); }, 300);
     };
     try {
-      const r = await fetch(`${API_URL}/print/bill/${bill.id}`, { method:"POST" });
+      const r = await apiFetch(`${API_URL}/print/bill/${bill.id}`, { method:"POST" });
       if (!r.ok) throw new Error();
     } catch { browserPrint(bill); }
   };
