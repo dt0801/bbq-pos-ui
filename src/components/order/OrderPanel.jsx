@@ -7,7 +7,7 @@ export default function OrderPanel({
   kitchenSent, itemNotes, setItemNotes, updateQty, setKitchenSent,
   canPay, darkMode, bgCard, textSub,
   setSplitModal, setSplitSelected, setSplitTarget, setShowTransferModal,
-  printKitchenTicket, printTamTinh, handlePayment, resetTable, saveOrders,
+  printKitchenTicket, printTamTinh, handlePayment, resetTable, saveOrders, cancelOrder,
 }) {
   const currentItems = Object.values(tableOrders[currentTable] || {});
   const total        = calcTotal(tableOrders[currentTable]);
@@ -78,6 +78,16 @@ export default function OrderPanel({
         <div className="flex justify-between font-bold mb-1">
           <span>Total:</span><span className="text-green-400">{formatMoney(total)}</span>
         </div>
+        {/* Hủy order */}
+        <button onClick={() => {
+            if (!currentTable || currentItems.length === 0) return;
+            if (!window.confirm(`Hủy toàn bộ order bàn ${currentTable}?`)) return;
+            cancelOrder(currentTable);
+          }} disabled={currentItems.length === 0}
+          className={`w-full py-2.5 rounded-xl font-bold transition text-sm ${currentItems.length > 0 ? "bg-red-600 hover:bg-red-700 text-white" : "bg-slate-600 opacity-50 cursor-not-allowed text-slate-400"}`}>
+          <i className="fa-solid fa-xmark mr-2" />Hủy Order
+        </button>
+
         {canPay ? (
           // Thu ngân: In phiếu bếp
           <button onClick={() => printKitchenTicket({ currentTable, currentItems, itemNotes, setKitchenSent })} disabled={currentItems.length===0}

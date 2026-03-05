@@ -142,6 +142,14 @@ export function useTables(apiFetch) {
     updateTableStatus(currentTable, "PAID");
   };
 
+  const cancelOrder = (tableNum) => {
+    setTableOrders(p  => { const c = {...p}; delete c[tableNum]; return c; });
+    setKitchenSent(p  => { const c = {...p}; delete c[tableNum]; return c; });
+    setItemNotes(p    => { const c = {...p}; delete c[tableNum]; return c; });
+    saveOrders(tableNum, {});
+    updateTableStatus(tableNum, "PAID");
+  };
+
   // ── CRUD bàn (tab Manage) ─────────────────────────────────────────────────
   const showTableMsg = (type, txt) => { setTableMsg({ type, text: txt }); setTimeout(() => setTableMsg(null), 3000); };
 
@@ -195,7 +203,7 @@ export function useTables(apiFetch) {
     tableMsg,
     fetchTableStatus, fetchTableList,
     updateTableStatus,
-    addItem, updateQty, saveOrders,
+    addItem, updateQty, saveOrders, cancelOrder,
     transferTable, executeSplit, resetTable,
     addTable, renameTable, deleteTable,
   };
