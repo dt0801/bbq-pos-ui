@@ -5,13 +5,13 @@ import { useAuth } from "./AuthContext";
 import LoginScreen from "./LoginScreen";
 
 import { filterMenu, TOTAL_TABLES } from "./constants";
-import { useMenu }        from "./hook/useMenu";
-import { useTables }      from "./hook/useTables";
-import { useBills }       from "./hook/useBills";
-import { useStats }       from "./hook/useStats";
-import { useStaff }       from "./hook/useStaff";
-import { useSettings }    from "./hook/useSettings";
-import { useRealtimeSync } from "./hook/useRealtimeSync";
+import { useMenu }        from "./hooks/useMenu";
+import { useTables }      from "./hooks/useTables";
+import { useBills }       from "./hooks/useBills";
+import { useStats }       from "./hooks/useStats";
+import { useStaff }       from "./hooks/useStaff";
+import { useSettings }    from "./hooks/useSettings";
+import { useRealtimeSync } from "./hooks/useRealtimeSync";
 
 import Sidebar   from "./Sidebar";
 import Header    from "./Header";
