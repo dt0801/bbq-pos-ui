@@ -1,15 +1,15 @@
-// App.js  Root: auth check + wire hooks + layout desktop/mobile
+// ─── App.js — Root: auth check + wire hooks + layout desktop/mobile ───────────
 import { useState, useEffect } from "react";
 import "./App.css";
 import { useAuth } from "./AuthContext";
 import LoginScreen from "./LoginScreen";
 
 import { filterMenu, TOTAL_TABLES } from "./constants";
-import { useMenu }         from "./hooks/useMenu";
-import { useTables }       from "./hooks/useTables";
-import { useBills }        from "./hooks/useBills";
-import { useStats }        from "./hooks/useStats";
-import { useStaff }        from "./hooks/useStaff";
+import { useMenu }     from "./hooks/useMenu";
+import { useTables }   from "./hooks/useTables";
+import { useBills }    from "./hooks/useBills";
+import { useStats }    from "./hooks/useStats";
+import { useStaff }    from "./hooks/useStaff";
 import { useSettings }     from "./hooks/useSettings";
 import { useRealtimeSync } from "./hooks/useRealtimeSync";
 
@@ -42,7 +42,7 @@ function AppInner() {
     if (token) headers["Authorization"] = `Bearer ${token}`;
     const res = await fetch(url, { ...options, headers });
     if (res.status === 401) {
-      alert("Phin lm vic  ht. Vui lng ng nhp li.");
+      alert("Phiên làm việc đã hết. Vui lòng đăng nhập lại.");
       logout();
       return null;
     }
@@ -52,7 +52,7 @@ function AppInner() {
   const canPay    = role === "admin" || role === "cashier";
   const canManage = role === "admin" || role === "cashier";
 
-  //  UI state 
+  // ── UI state ──────────────────────────────────────────────────────────────
   const [filter,       setFilter]       = useState("ALL");
   const [sidebarView,  setSidebarView]  = useState("order");
   const [darkMode,     setDarkMode]     = useState(true);
@@ -63,10 +63,10 @@ function AppInner() {
   const [splitTarget,  setSplitTarget]  = useState("");
   const [splitSelected,setSplitSelected]= useState([]);
 
-  //  Hooks 
+  // ── Hooks ─────────────────────────────────────────────────────────────────
   const menuHook     = useMenu(apiFetch);
-  const tablesHook   = useTables(apiFetch);
-  const settingsHook = useSettings(apiFetch);
+  const tablesHook   = useTables();
+  const settingsHook = useSettings();
   const billsHook    = useBills(settingsHook.settings, apiFetch);
   const statsHook    = useStats();
   const staffHook    = useStaff(getToken);
@@ -78,21 +78,12 @@ function AppInner() {
   const { staffList, staffForm, setStaffForm, staffEditing, staffShowForm, setStaffShowForm, staffError, fetchStaff, openCreateStaff, openEditStaff, submitStaff, deleteStaff } = staffHook;
   const { settings, setSettings, settingsSaved, saveAllSettings, printers, printerForm, setPrinterForm, editPrinter, setEditPrinter, printJobs, loadingPrinters, printerMsg, fetchPrinters, fetchPrintJobs, savePrinter, deletePrinter, togglePrinterActive, retryJob } = settingsHook;
 
-  //  Realtime sync 
-  useRealtimeSync({
-    getToken,
-    setTableStatus: tablesHook.setTableStatus,
-    setTableOrders: tablesHook.setTableOrders,
-    setKitchenSent: tablesHook.setKitchenSent,
-    setItemNotes:   tablesHook.setItemNotes,
-  });
-
-  //  Derived 
+  // ── Derived ───────────────────────────────────────────────────────────────
   const tables      = tableList.length > 0 ? tableList.map(t => t.table_num) : Array.from({ length: TOTAL_TABLES }, (_, i) => i + 1);
   const currentItems = Object.values(tableOrders[currentTable] || {});
   const filteredMenu = filterMenu(menu, filter);
 
-  //  Effects 
+  // ── Effects ───────────────────────────────────────────────────────────────
   useEffect(() => { fetchMenu(); fetchTableStatus(); fetchTableList(); }, []); // eslint-disable-line
   useEffect(() => { if (sidebarView === "manage")   fetchTableList(); },   [sidebarView]); // eslint-disable-line
   useEffect(() => { if (sidebarView === "history")  fetchBills(historyDate); }, [sidebarView, historyDate]); // eslint-disable-line
@@ -100,7 +91,7 @@ function AppInner() {
   useEffect(() => { if (sidebarView === "settings") { fetchPrinters(); fetchPrintJobs(); } }, [sidebarView]); // eslint-disable-line
   useEffect(() => { if (role === "admin") fetchStaff(); }, [role]); // eslint-disable-line
 
-  //  Theme 
+  // ── Theme ─────────────────────────────────────────────────────────────────
   const bg      = darkMode ? "bg-[#0f172a]"   : "bg-gray-100";
   const bgPanel = darkMode ? "bg-[#111827]"   : "bg-white";
   const bgCard  = darkMode ? "bg-[#1e293b]"   : "bg-gray-50 border border-gray-200";
@@ -110,7 +101,7 @@ function AppInner() {
     ? "bg-[#1e293b] text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 w-full"
     : "bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-400 w-full";
 
-  //  Props bundles 
+  // ── Props bundles ─────────────────────────────────────────────────────────
   const theme = { darkMode, bgCard, textSub, inputCls, text };
 
   const manageProps = {
@@ -141,7 +132,7 @@ function AppInner() {
     printers, printerForm, setPrinterForm, editPrinter, setEditPrinter,
     printJobs, loadingPrinters, printerMsg,
     fetchPrinters, fetchPrintJobs, savePrinter, deletePrinter, togglePrinterActive, retryJob,
-    // staff (tab Ti khon trong Settings)
+    // staff (tab Tài khoản trong Settings)
     staffList, staffForm, setStaffForm, staffEditing, staffShowForm, setStaffShowForm, staffError,
     openCreateStaff, openEditStaff, submitStaff, deleteStaff,
     ...theme,
@@ -157,7 +148,7 @@ function AppInner() {
     resetTable, saveOrders,
   };
 
-  //  Render 
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className={`${bg} ${text} transition-colors duration-300`} style={{ minHeight: "100svh" }}>
 
@@ -175,7 +166,7 @@ function AppInner() {
           bgPanel={bgPanel} text={text} />
       )}
 
-      {/*  DESKTOP (md+)  */}
+      {/* ════ DESKTOP (md+) ════ */}
       <div className="hidden md:flex h-screen overflow-hidden">
         <Sidebar sidebarView={sidebarView} setSidebarView={setSidebarView}
           canPay={canPay} canManage={canManage} role={role}
@@ -184,10 +175,10 @@ function AppInner() {
 
         {sidebarView === "order" && (
           <div className={`w-56 ${bgPanel} p-4 overflow-y-auto flex-shrink-0`}>
-            <h2 className="mb-3 font-bold">BN</h2>
+            <h2 className="mb-3 font-bold">BÀN</h2>
             <div className="flex gap-3 mb-3 text-xs">
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-slate-600 inline-block"/>Trng</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-orange-500 inline-block"/>C khch</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-slate-600 inline-block"/>Trống</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-orange-500 inline-block"/>Có khách</span>
             </div>
             <TableGrid tables={tables} tableStatus={tableStatus} tableOrders={tableOrders} currentTable={currentTable} setCurrentTable={setCurrentTable} />
           </div>
@@ -215,7 +206,7 @@ function AppInner() {
         )}
       </div>
 
-      {/*  MOBILE (<md)  */}
+      {/* ════ MOBILE (<md) ════ */}
       <div className="flex flex-col md:hidden" style={{ height: "100svh" }}>
         <Header currentTable={currentTable} tableStatus={tableStatus} printerStatus={printerStatus}
           darkMode={darkMode} setDarkMode={setDarkMode} logout={logout} textSub={textSub} />
@@ -224,10 +215,10 @@ function AppInner() {
           {mobileTab === "tables" && (
             <div className="h-full overflow-y-auto p-3">
               <div className="flex items-center gap-3 mb-3">
-                <h2 className="font-bold text-sm">CHN BN</h2>
+                <h2 className="font-bold text-sm">CHỌN BÀN</h2>
                 <div className="flex gap-3 text-xs">
-                  <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-slate-600 inline-block"/>Trng</span>
-                  <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-orange-500 inline-block"/>C khch</span>
+                  <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-slate-600 inline-block"/>Trống</span>
+                  <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-orange-500 inline-block"/>Có khách</span>
                 </div>
               </div>
               <TableGrid tables={tables} tableStatus={tableStatus} tableOrders={tableOrders} currentTable={currentTable} setCurrentTable={setCurrentTable} onSelect={() => setMobileTab("menu")} />
@@ -238,9 +229,9 @@ function AppInner() {
             <div className="h-full overflow-y-auto p-3">
               {currentTable ? (
                 <div className={`mb-3 px-3 py-2 rounded-xl ${bgCard} flex items-center justify-between`}>
-                  <span className="text-sm font-semibold">Bn {currentTable}</span>
+                  <span className="text-sm font-semibold">Bàn {currentTable}</span>
                   <div className="flex gap-2 items-center">
-                    <button onClick={() => setMobileTab("tables")} className={`text-xs ${textSub}`}><i className="fa-solid fa-arrow-left mr-1"/>i bn</button>
+                    <button onClick={() => setMobileTab("tables")} className={`text-xs ${textSub}`}><i className="fa-solid fa-arrow-left mr-1"/>Đổi bàn</button>
                     <button onClick={() => setMobileTab("order")} className="relative text-xs bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg font-bold">
                       <i className="fa-solid fa-receipt mr-1"/>Order
                       {currentItems.reduce((s,i) => s+i.qty,0) > 0 && <span className="ml-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">{currentItems.reduce((s,i)=>s+i.qty,0)}</span>}
@@ -249,7 +240,7 @@ function AppInner() {
                 </div>
               ) : (
                 <div className="mb-3 px-3 py-2 rounded-xl bg-yellow-500/20 border border-yellow-500/40 text-yellow-400 text-sm">
-                   Cha chn bn  <button onClick={() => setMobileTab("tables")} className="underline font-semibold">chn bn</button>
+                  ⚠️ Chưa chọn bàn — <button onClick={() => setMobileTab("tables")} className="underline font-semibold">chọn bàn</button>
                 </div>
               )}
               <FilterBar filter={filter} setFilter={setFilter} bgCard={bgCard} textSub={textSub} />
