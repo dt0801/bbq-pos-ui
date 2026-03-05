@@ -131,8 +131,7 @@ function BillPreview({ cfg, type }) {
 // REPORT BILL TAB — 3 sub-tab
 // ═══════════════════════════════════════════════════════════════════
 function ReportBillTab({ settings, setSettings, saveAllSettings, settingsSaved, darkMode, bgCard, textSub, inputCls }) {
-  const [billType,    setBillType]    = useState("bill");
-  const [showPreview, setShowPreview] = useState(false);
+  const [billType, setBillType] = useState("bill");
 
   // prefix cho từng loại: bill_ | tamtinh_ | kitchen_
   const P = { bill:"bill_", tamtinh:"tamtinh_", kitchen:"kitchen_" }[billType];
@@ -185,127 +184,155 @@ function ReportBillTab({ settings, setSettings, saveAllSettings, settingsSaved, 
   );
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Sub-tab chọn loại bill */}
-      <div className={`${bgCard} rounded-2xl p-1 flex gap-1`}>
-        {subTabs.map(t=>(
-          <button key={t.key} onClick={()=>{ setBillType(t.key); setShowPreview(false); }}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition ${billType===t.key?"bg-blue-500 text-white":`${textSub} hover:bg-slate-700`}`}>
-            <i className={`fa-solid ${t.icon} ${billType===t.key?"text-white":t.color}`}/>
-            {t.label}
-          </button>
-        ))}
-      </div>
+    <div className="flex gap-5 h-full min-h-0">
 
-      {/* Thông tin cửa hàng — chỉ hiện cho bill & tamtinh */}
-      {billType !== "kitchen" && (
-        <div className={`${bgCard} rounded-2xl p-5 flex flex-col gap-4`}>
-          <h3 className="font-bold text-sm"><i className="fa-solid fa-store mr-2 text-orange-400"/>Thông tin hiển thị</h3>
-          <div className={`text-xs px-3 py-2 rounded-xl ${darkMode?"bg-slate-700 text-slate-400":"bg-gray-100 text-gray-500"}`}>
-            <i className="fa-solid fa-circle-info mr-1"/>
-            Tên, địa chỉ, hotline lấy từ cài đặt cửa hàng bên dưới
+      {/* ── CỘT TRÁI: Settings ── */}
+      <div className="flex flex-col gap-4 w-full max-w-sm flex-shrink-0 overflow-y-auto pb-4 pr-1">
+
+        {/* Sub-tab chọn loại bill */}
+        <div className={`${bgCard} rounded-2xl p-1 flex gap-1`}>
+          {subTabs.map(t=>(
+            <button key={t.key} onClick={()=>setBillType(t.key)}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition ${billType===t.key?"bg-blue-500 text-white":`${textSub} hover:bg-slate-700`}`}>
+              <i className={`fa-solid ${t.icon} ${billType===t.key?"text-white":t.color}`}/>
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Thông tin cửa hàng — chỉ hiện cho bill & tamtinh */}
+        {billType !== "kitchen" && (
+          <div className={`${bgCard} rounded-2xl p-5 flex flex-col gap-4`}>
+            <h3 className="font-bold text-sm"><i className="fa-solid fa-store mr-2 text-orange-400"/>Thông tin hiển thị</h3>
+            <div className={`text-xs px-3 py-2 rounded-xl ${darkMode?"bg-slate-700 text-slate-400":"bg-gray-100 text-gray-500"}`}>
+              <i className="fa-solid fa-circle-info mr-1"/>
+              Tên, địa chỉ, hotline lấy từ cài đặt cửa hàng bên dưới
+            </div>
+            <Field label="Dòng phụ đề (tuỳ chọn)" k="extra_header" placeholder="VD: MST: 0123456789" type="textarea"/>
+            <div>
+              <label className={`block text-xs font-semibold ${textSub} mb-1`}>Căn lề tiêu đề</label>
+              <div className="flex gap-2">
+                {[["left","◀ Trái"],["center","▣ Giữa"],["right","Phải ▶"]].map(([v,l])=>(
+                  <button key={v} onClick={()=>set("header_align",v)}
+                    className={`flex-1 py-2 rounded-xl text-xs font-semibold transition border ${(get("header_align")||"center")===v?"bg-blue-500 text-white border-blue-500":darkMode?"border-slate-600 text-slate-300 hover:bg-slate-700":"border-gray-300 text-gray-600 hover:bg-gray-100"}`}>
+                    {l}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
-          <Field label="Dòng phụ đề (tuỳ chọn)"   k="extra_header"  placeholder="VD: MST: 0123456789" type="textarea"/>
+        )}
+
+        {/* Định dạng chữ */}
+        <div className={`${bgCard} rounded-2xl p-5 flex flex-col gap-4`}>
+          <h3 className="font-bold text-sm"><i className="fa-solid fa-font mr-2 text-blue-400"/>Định dạng chữ</h3>
           <div>
-            <label className={`block text-xs font-semibold ${textSub} mb-1`}>Căn lề tiêu đề</label>
+            <label className={`block text-xs font-semibold ${textSub} mb-2`}>Cỡ chữ</label>
+            <div className="flex items-center gap-3">
+              <input type="range" min="11" max="16" value={get("font_size")||"13"} onChange={e=>set("font_size",e.target.value)} className="flex-1 accent-blue-500"/>
+              <span className={`text-sm font-bold w-10 text-center py-1 rounded-lg ${darkMode?"bg-slate-700":"bg-gray-200"}`}>{get("font_size")||"13"}px</span>
+            </div>
+          </div>
+          <div>
+            <label className={`block text-xs font-semibold ${textSub} mb-1`}>Kiểu chữ</label>
             <div className="flex gap-2">
-              {[["left","◀ Trái"],["center","▣ Giữa"],["right","Phải ▶"]].map(([v,l])=>(
-                <button key={v} onClick={()=>set("header_align",v)}
-                  className={`flex-1 py-2 rounded-xl text-xs font-semibold transition border ${(get("header_align")||"center")===v?"bg-blue-500 text-white border-blue-500":darkMode?"border-slate-600 text-slate-300 hover:bg-slate-700":"border-gray-300 text-gray-600 hover:bg-gray-100"}`}>
+              {[["normal","Thường"],["bold","Đậm"],["italic","Nghiêng"]].map(([v,l])=>(
+                <button key={v} onClick={()=>set("font_style",v)}
+                  className={`flex-1 py-2 rounded-xl text-xs font-semibold transition border ${(get("font_style")||"normal")===v?"bg-blue-500 text-white border-blue-500":darkMode?"border-slate-600 text-slate-300 hover:bg-slate-700":"border-gray-300 text-gray-600 hover:bg-gray-100"}`}
+                  style={{fontWeight:v==="bold"?"bold":"normal", fontStyle:v==="italic"?"italic":"normal"}}>
                   {l}
                 </button>
               ))}
             </div>
           </div>
         </div>
-      )}
 
-      {/* Định dạng chữ */}
-      <div className={`${bgCard} rounded-2xl p-5 flex flex-col gap-4`}>
-        <h3 className="font-bold text-sm"><i className="fa-solid fa-font mr-2 text-blue-400"/>Định dạng chữ</h3>
-        <div>
-          <label className={`block text-xs font-semibold ${textSub} mb-2`}>Cỡ chữ</label>
-          <div className="flex items-center gap-3">
-            <input type="range" min="11" max="16" value={get("font_size")||"13"} onChange={e=>set("font_size",e.target.value)} className="flex-1 accent-blue-500"/>
-            <span className={`text-sm font-bold w-10 text-center py-1 rounded-lg ${darkMode?"bg-slate-700":"bg-gray-200"}`}>{get("font_size")||"13"}px</span>
+        {/* Cột hiển thị — chỉ bill thanh toán */}
+        {billType === "bill" && (
+          <div className={`${bgCard} rounded-2xl p-5 flex flex-col gap-3`}>
+            <h3 className="font-bold text-sm"><i className="fa-solid fa-table-columns mr-2 text-purple-400"/>Cột hiển thị</h3>
+            <Toggle label="Cột Số lượng" k="show_qty"        desc="Hiện cột SL trong bảng món"/>
+            <Toggle label="Cột Đơn giá"  k="show_unit_price" desc="Hiện giá mỗi món trước khi nhân"/>
           </div>
-        </div>
-        <div>
-          <label className={`block text-xs font-semibold ${textSub} mb-1`}>Kiểu chữ</label>
-          <div className="flex gap-2">
-            {[["normal","Thường"],["bold","Đậm"],["italic","Nghiêng"]].map(([v,l])=>(
-              <button key={v} onClick={()=>set("font_style",v)}
-                className={`flex-1 py-2 rounded-xl text-xs font-semibold transition border ${(get("font_style")||"normal")===v?"bg-blue-500 text-white border-blue-500":darkMode?"border-slate-600 text-slate-300 hover:bg-slate-700":"border-gray-300 text-gray-600 hover:bg-gray-100"}`}
-                style={{fontWeight:v==="bold"?"bold":"normal", fontStyle:v==="italic"?"italic":"normal"}}>
-                {l}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Cột hiển thị — chỉ bill thanh toán */}
-      {billType === "bill" && (
-        <div className={`${bgCard} rounded-2xl p-5 flex flex-col gap-3`}>
-          <h3 className="font-bold text-sm"><i className="fa-solid fa-table-columns mr-2 text-purple-400"/>Cột hiển thị</h3>
-          <Toggle label="Cột Số lượng"  k="show_qty"         desc="Hiện cột SL trong bảng món"/>
-          <Toggle label="Cột Đơn giá"   k="show_unit_price"  desc="Hiện giá mỗi món trước khi nhân"/>
-        </div>
-      )}
-
-      {/* Lời nhắn */}
-      <div className={`${bgCard} rounded-2xl p-5 flex flex-col gap-4`}>
-        <h3 className="font-bold text-sm"><i className="fa-solid fa-comment-dots mr-2 text-green-400"/>
-          {billType==="kitchen" ? "Ghi chú phiếu bếp" : "Lời nhắn cuối bill"}
-        </h3>
-        <Field
-          label={billType==="kitchen" ? "Dòng chú thích (tuỳ chọn)" : "Lời cảm ơn"}
-          k="footer"
-          placeholder={billType==="kitchen" ? "VD: Giao bếp nhanh!" : "Cảm Ơn Quý Khách - Hẹn Gặp Lại!"}
-          type="textarea"
-        />
-        {billType !== "kitchen" && (
-          <Field label="Dòng phụ cuối (tuỳ chọn)" k="extra_footer" placeholder="VD: ⭐ Đánh giá Google Maps giúp chúng mình!" type="textarea"/>
         )}
-      </div>
 
-      {/* Thông tin cửa hàng chung */}
-      <div className={`${bgCard} rounded-2xl p-5 flex flex-col gap-4`}>
-        <h3 className="font-bold text-sm"><i className="fa-solid fa-store mr-2 text-orange-400"/>Thông tin cửa hàng (dùng chung)</h3>
-        {[
-          {label:"Tên cửa hàng",           k:"store_name",    placeholder:"TIỆM NƯỚNG ĐÀ LẠT VÀ EM"},
-          {label:"Địa chỉ",                k:"store_address", placeholder:"24 đường 3 tháng 4, Đà Lạt"},
-          {label:"Số điện thoại / Hotline", k:"store_phone",   placeholder:"081 366 5665"},
-        ].map(({label,k,placeholder})=>(
-          <div key={k}>
-            <label className={`block text-xs font-semibold ${textSub} mb-1`}>{label}</label>
-            <input value={settings[k]||""} placeholder={placeholder} onChange={e=>setSettings(s=>({...s,[k]:e.target.value}))} className={inputCls}/>
-          </div>
-        ))}
-      </div>
-
-      {/* Preview */}
-      <button onClick={()=>setShowPreview(v=>!v)}
-        className={`w-full py-2.5 rounded-xl font-bold text-sm transition border ${darkMode?"border-slate-600 text-slate-300 hover:bg-slate-700":"border-gray-300 text-gray-700 hover:bg-gray-100"}`}>
-        <i className={`fa-solid ${showPreview?"fa-eye-slash":"fa-eye"} mr-2`}/>
-        {showPreview ? "Ẩn xem trước" : "👁 Xem trước bill"}
-      </button>
-
-      {showPreview && (
-        <div className={`${darkMode?"bg-slate-700":"bg-gray-100"} rounded-2xl p-4`}>
-          <div className={`text-xs font-semibold ${textSub} uppercase tracking-wider mb-3`}>
-            <i className="fa-solid fa-receipt mr-2"/>Xem trước — {subTabs.find(t=>t.key===billType)?.label} (dữ liệu mẫu)
-          </div>
-          <BillPreview cfg={previewCfg} type={billType}/>
+        {/* Lời nhắn */}
+        <div className={`${bgCard} rounded-2xl p-5 flex flex-col gap-4`}>
+          <h3 className="font-bold text-sm"><i className="fa-solid fa-comment-dots mr-2 text-green-400"/>
+            {billType==="kitchen" ? "Ghi chú phiếu bếp" : "Lời nhắn cuối bill"}
+          </h3>
+          <Field
+            label={billType==="kitchen" ? "Dòng chú thích (tuỳ chọn)" : "Lời cảm ơn"}
+            k="footer"
+            placeholder={billType==="kitchen" ? "VD: Giao bếp nhanh!" : "Cảm Ơn Quý Khách - Hẹn Gặp Lại!"}
+            type="textarea"
+          />
+          {billType !== "kitchen" && (
+            <Field label="Dòng phụ cuối (tuỳ chọn)" k="extra_footer" placeholder="VD: ⭐ Đánh giá Google Maps giúp chúng mình!" type="textarea"/>
+          )}
         </div>
-      )}
 
-      <button onClick={saveAllSettings}
-        className={`w-full py-3 rounded-xl font-bold text-white transition ${settingsSaved?"bg-green-500":"bg-orange-500 hover:bg-orange-600"}`}>
-        {settingsSaved
-          ? <><i className="fa-solid fa-circle-check mr-2"/>Đã lưu!</>
-          : <><i className="fa-solid fa-floppy-disk mr-2"/>Lưu cài đặt</>}
-      </button>
+        {/* Thông tin cửa hàng chung */}
+        <div className={`${bgCard} rounded-2xl p-5 flex flex-col gap-4`}>
+          <h3 className="font-bold text-sm"><i className="fa-solid fa-store mr-2 text-orange-400"/>Thông tin cửa hàng (dùng chung)</h3>
+          {[
+            {label:"Tên cửa hàng",           k:"store_name",    placeholder:"TIỆM NƯỚNG ĐÀ LẠT VÀ EM"},
+            {label:"Địa chỉ",                k:"store_address", placeholder:"24 đường 3 tháng 4, Đà Lạt"},
+            {label:"Số điện thoại / Hotline", k:"store_phone",   placeholder:"081 366 5665"},
+          ].map(({label,k,placeholder})=>(
+            <div key={k}>
+              <label className={`block text-xs font-semibold ${textSub} mb-1`}>{label}</label>
+              <input value={settings[k]||""} placeholder={placeholder} onChange={e=>setSettings(s=>({...s,[k]:e.target.value}))} className={inputCls}/>
+            </div>
+          ))}
+        </div>
+
+        <button onClick={saveAllSettings}
+          className={`w-full py-3 rounded-xl font-bold text-white transition ${settingsSaved?"bg-green-500":"bg-orange-500 hover:bg-orange-600"}`}>
+          {settingsSaved
+            ? <><i className="fa-solid fa-circle-check mr-2"/>Đã lưu!</>
+            : <><i className="fa-solid fa-floppy-disk mr-2"/>Lưu cài đặt</>}
+        </button>
+      </div>
+
+      {/* ── CỘT PHẢI: Preview bill cố định ── */}
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        {/* Header preview */}
+        <div className={`flex items-center gap-2 mb-3 flex-shrink-0`}>
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold ${darkMode?"bg-slate-700 text-slate-300":"bg-gray-200 text-gray-600"}`}>
+            <i className="fa-solid fa-eye text-blue-400"/>
+            Preview — {subTabs.find(t=>t.key===billType)?.label}
+          </div>
+          <div className={`text-xs ${textSub} italic`}>cập nhật realtime</div>
+        </div>
+
+        {/* Paper preview area */}
+        <div className={`flex-1 overflow-y-auto rounded-2xl flex items-start justify-center py-6 px-4 ${darkMode?"bg-[#0b1220]":"bg-gray-200"}`}
+          style={{backgroundImage: darkMode
+            ? "radial-gradient(circle at 1px 1px, rgba(99,102,241,0.08) 1px, transparent 0)"
+            : "radial-gradient(circle at 1px 1px, rgba(0,0,0,0.06) 1px, transparent 0)",
+            backgroundSize:"24px 24px"}}>
+
+          {/* Receipt paper with shadow */}
+          <div style={{
+            filter:"drop-shadow(0 8px 32px rgba(0,0,0,0.4))",
+            maxWidth:"320px", width:"100%",
+          }}>
+            {/* Top jagged edge */}
+            <div style={{
+              height:"10px", background:"#fff",
+              clipPath:"polygon(0% 100%,2% 0%,4% 100%,6% 0%,8% 100%,10% 0%,12% 100%,14% 0%,16% 100%,18% 0%,20% 100%,22% 0%,24% 100%,26% 0%,28% 100%,30% 0%,32% 100%,34% 0%,36% 100%,38% 0%,40% 100%,42% 0%,44% 100%,46% 0%,48% 100%,50% 0%,52% 100%,54% 0%,56% 100%,58% 0%,60% 100%,62% 0%,64% 100%,66% 0%,68% 100%,70% 0%,72% 100%,74% 0%,76% 100%,78% 0%,80% 100%,82% 0%,84% 100%,86% 0%,88% 100%,90% 0%,92% 100%,94% 0%,96% 100%,98% 0%,100% 100%)"
+            }}/>
+            <BillPreview cfg={previewCfg} type={billType}/>
+            {/* Bottom jagged edge */}
+            <div style={{
+              height:"10px", background:"#fff",
+              clipPath:"polygon(0% 0%,2% 100%,4% 0%,6% 100%,8% 0%,10% 100%,12% 0%,14% 100%,16% 0%,18% 100%,20% 0%,22% 100%,24% 0%,26% 100%,28% 0%,30% 100%,32% 0%,34% 100%,36% 0%,38% 100%,40% 0%,42% 100%,44% 0%,46% 100%,48% 0%,50% 100%,52% 0%,54% 100%,56% 0%,58% 100%,60% 0%,62% 100%,64% 0%,66% 100%,68% 0%,70% 100%,72% 0%,74% 100%,76% 0%,78% 100%,80% 0%,82% 100%,84% 0%,86% 100%,88% 0%,90% 100%,92% 0%,94% 100%,96% 0%,98% 100%,100% 0%)"
+            }}/>
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 }
@@ -473,7 +500,7 @@ export default function SettingsView({
           </button>
         ))}
       </div>
-      <div className="flex-1 overflow-y-auto pb-4 max-w-lg">
+      <div className={`flex-1 overflow-y-auto pb-4 ${activeTab==="report"?"":"max-w-lg"}`}>
         {activeTab==="printer"&&<PrinterTab printers={printers} printerForm={printerForm} setPrinterForm={setPrinterForm} editPrinter={editPrinter} setEditPrinter={setEditPrinter} printJobs={printJobs} loadingPrinters={loadingPrinters} printerMsg={printerMsg} fetchPrinters={fetchPrinters} fetchPrintJobs={fetchPrintJobs} savePrinter={savePrinter} deletePrinter={deletePrinter} togglePrinterActive={togglePrinterActive} retryJob={retryJob} darkMode={darkMode} bgCard={bgCard} textSub={textSub} inputCls={inputCls} text={text}/>}
         {activeTab==="account"&&<AccountTab staffList={staffList} staffForm={staffForm} setStaffForm={setStaffForm} staffEditing={staffEditing} staffShowForm={staffShowForm} setStaffShowForm={setStaffShowForm} staffError={staffError} openCreateStaff={openCreateStaff} openEditStaff={openEditStaff} submitStaff={submitStaff} deleteStaff={deleteStaff} darkMode={darkMode} bgCard={bgCard} textSub={textSub} inputCls={inputCls}/>}
         {activeTab==="report"&&<ReportBillTab settings={settings} setSettings={setSettings} saveAllSettings={saveAllSettings} settingsSaved={settingsSaved} darkMode={darkMode} bgCard={bgCard} textSub={textSub} inputCls={inputCls}/>}
