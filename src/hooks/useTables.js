@@ -1,0 +1,179 @@
+// ─── useTables — quản lý bàn, order, chuyển bàn, tách bàn ───────────────────
+import { useState, useCallback } from "react";
+import { API_URL } from "../constants";
+
+export function useTables() {
+  const [tableList,    setTableList]    = useState([]);
+  const [tableStatus,  setTableStatus]  = useState({});
+  const [tableOrders,  setTableOrders]  = useState({});
+  const [currentTable, setCurrentTable] = useState(null);
+  const [kitchenSent,  setKitchenSent]  = useState({});
+  const [itemNotes,    setItemNotes]    = useState({});
+  // quản lý bàn (tab Manage)
+  const [newTableNum,  setNewTableNum]  = useState("");
+  const [editingTable, setEditingTable] = useState(null);
+  const [tableMsg,     setTableMsg]     = useState(null);
+
+  // ── Fetch ──────────────────────────────────────────────────────────────────
+  const fetchTableStatus = useCallback(() => {
+    fetch(`${API_URL}/tables`)
+      .then(r => r.json())
+      .then(rows => {
+        const m = {};
+        rows.forEach(r => { m[r.table_num] = r.status; });
+        setTableStatus(m);
+      }).catch(() => {});
+  }, []);
+
+  const fetchTableList = useCallback(() => {
+    Promise.all([
+      fetch(`${API_URL}/tables`).then(r => r.json()),
+      fetch(`${API_URL}/settings`).then(r => r.json()),
+    ]).then(([rows, cfg]) => {
+      const tot = Math.max(Number(cfg.total_tables) || 20, rows.reduce((mx,r) => Math.max(mx,r.table_num), 0));
+      const dbMap = {};
+      rows.forEach(r => { dbMap[r.table_num] = r.status; });
+      setTableList(Array.from({ length: tot }, (_, i) => ({
+        table_num: i + 1,
+        status: dbMap[i + 1] || "PAID",
+      })));
+    }).catch(() => {});
+  }, []);
+
+  // ── Cập nhật trạng thái bàn ───────────────────────────────────────────────
+  const updateTableStatus = async (num, status) => {
+    setTableStatus(p => ({ ...p, [num]: status }));
+    await fetch(`${API_URL}/tables/${num}/status`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+  };
+
+  // ── Thêm / sửa số lượng món ───────────────────────────────────────────────
+  const addItem = useCallback((item) => {
+    if (!currentTable) return alert("Vui lòng chọn bàn trước!");
+    setTableOrders(prev => {
+      const tbl = prev[currentTable] || {}, ex = tbl[item.id];
+      return { ...prev, [currentTable]: { ...tbl, [item.id]: ex ? { ...ex, qty: ex.qty + 1 } : { ...item, qty: 1 } } };
+    });
+    if (!tableStatus[currentTable] || tableStatus[currentTable] === "PAID")
+      updateTableStatus(currentTable, "OPEN"); // eslint-disable-line
+  }, [currentTable, tableStatus]); // eslint-disable-line
+
+  const updateQty = useCallback((itemId, action) => {
+    if (!currentTable) return;
+    setTableOrders(prev => {
+      const tbl = prev[currentTable];
+      if (!tbl || !tbl[itemId]) return prev;
+      const nq  = action === "inc" ? tbl[itemId].qty + 1 : tbl[itemId].qty - 1;
+      const upd = { ...tbl };
+      if (nq <= 0) delete upd[itemId];
+      else upd[itemId] = { ...tbl[itemId], qty: nq };
+      return { ...prev, [currentTable]: upd };
+    });
+  }, [currentTable]);
+
+  // ── Chuyển bàn ────────────────────────────────────────────────────────────
+  const transferTable = async (target, setShowTransferModal) => {
+    if (!currentTable || currentTable === target) return;
+    if (tableStatus[target] === "OPEN" || tableStatus[target] === "PAYING")
+      return alert(`Bàn ${target} đang có khách!`);
+    setTableOrders(p  => { const u = {...p};  u[target] = p[currentTable]||{}; delete u[currentTable]; return u; });
+    setKitchenSent(p  => { const u = {...p};  u[target] = p[currentTable]||{}; delete u[currentTable]; return u; });
+    setItemNotes(p    => { const u = {...p};  u[target] = p[currentTable]||{}; delete u[currentTable]; return u; });
+    await updateTableStatus(currentTable, "PAID");
+    await updateTableStatus(target, "OPEN");
+    setTableStatus(p => ({ ...p, [currentTable]: "PAID", [target]: "OPEN" }));
+    setCurrentTable(target);
+    setShowTransferModal(false);
+  };
+
+  // ── Tách bàn ──────────────────────────────────────────────────────────────
+  const executeSplit = ({ currentItems, splitTarget, splitSelected, setSplitModal, setSplitSelected, setSplitTarget }) => {
+    if (!splitTarget || splitSelected.length === 0) return;
+    const move = currentItems.filter(i =>  splitSelected.includes(i.id));
+    const rest = currentItems.filter(i => !splitSelected.includes(i.id));
+    setTableOrders(p => {
+      const dest = { ...(p[splitTarget] || {}) };
+      move.forEach(it => {
+        if (dest[it.id]) dest[it.id] = { ...dest[it.id], qty: dest[it.id].qty + it.qty };
+        else dest[it.id] = { ...it };
+      });
+      const restObj = {};
+      rest.forEach(it => { restObj[it.id] = it; });
+      return { ...p, [splitTarget]: dest, [currentTable]: restObj };
+    });
+    setTableStatus(p => ({ ...p, [splitTarget]: "OPEN", ...(rest.length === 0 ? { [currentTable]: "PAID" } : {}) }));
+    updateTableStatus(splitTarget, "OPEN");
+    if (rest.length === 0) updateTableStatus(currentTable, "PAID");
+    setSplitModal(false); setSplitSelected([]); setSplitTarget("");
+  };
+
+  // ── Reset bàn ─────────────────────────────────────────────────────────────
+  const resetTable = () => {
+    if (!currentTable || !window.confirm(`Reset bàn ${currentTable}?`)) return;
+    setTableOrders(p  => { const c = {...p}; delete c[currentTable]; return c; });
+    setKitchenSent(p  => { const c = {...p}; delete c[currentTable]; return c; });
+    setItemNotes(p    => { const c = {...p}; delete c[currentTable]; return c; });
+    updateTableStatus(currentTable, "PAID");
+  };
+
+  // ── CRUD bàn (tab Manage) ─────────────────────────────────────────────────
+  const showTableMsg = (type, txt) => { setTableMsg({ type, text: txt }); setTimeout(() => setTableMsg(null), 3000); };
+
+  const addTable = async () => {
+    const num = Number(newTableNum);
+    if (!num || num < 1)                            return showTableMsg("err", "Số bàn không hợp lệ");
+    if (tableList.some(t => t.table_num === num))   return showTableMsg("err", `Bàn ${num} đã tồn tại`);
+    await fetch(`${API_URL}/tables`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ table_num: num }) });
+    if (num > tableList.length)
+      await fetch(`${API_URL}/settings`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ key:"total_tables", value:String(num) }) });
+    setNewTableNum("");
+    showTableMsg("ok", `Đã thêm Bàn ${num}`);
+    fetchTableList(); fetchTableStatus();
+  };
+
+  const renameTable = async () => {
+    if (!editingTable) return;
+    const { table_num, new_num } = editingTable;
+    if (!new_num || Number(new_num) < 1) return showTableMsg("err", "Số bàn không hợp lệ");
+    if (Number(new_num) === table_num)   { setEditingTable(null); return; }
+    const res = await fetch(`${API_URL}/tables/${table_num}`, { method:"PUT", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ new_num: Number(new_num) }) });
+    const d   = await res.json();
+    if (!res.ok) return showTableMsg("err", d.error);
+    setEditingTable(null);
+    showTableMsg("ok", `Đã đổi Bàn ${table_num} → Bàn ${new_num}`);
+    fetchTableList(); fetchTableStatus();
+  };
+
+  const deleteTable = async (num) => {
+    if (!window.confirm(`Xóa Bàn ${num}?`)) return;
+    const inDb = tableList.find(t => t.table_num === num);
+    if (inDb) {
+      const res = await fetch(`${API_URL}/tables/${num}`, { method:"DELETE" });
+      const d   = await res.json();
+      if (!res.ok) return showTableMsg("err", d.error);
+    }
+    setTableList(p => p.filter(t => t.table_num !== num));
+    showTableMsg("ok", `Đã xóa Bàn ${num}`);
+    fetchTableStatus();
+  };
+
+  return {
+    tableList, setTableList,
+    tableStatus, setTableStatus,
+    tableOrders, setTableOrders,
+    currentTable, setCurrentTable,
+    kitchenSent,  setKitchenSent,
+    itemNotes,    setItemNotes,
+    newTableNum,  setNewTableNum,
+    editingTable, setEditingTable,
+    tableMsg,
+    fetchTableStatus, fetchTableList,
+    updateTableStatus,
+    addItem, updateQty,
+    transferTable, executeSplit, resetTable,
+    addTable, renameTable, deleteTable,
+  };
+}
