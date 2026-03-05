@@ -78,6 +78,15 @@ function AppInner() {
   const { staffList, staffForm, setStaffForm, staffEditing, staffShowForm, setStaffShowForm, staffError, fetchStaff, openCreateStaff, openEditStaff, submitStaff, deleteStaff } = staffHook;
   const { settings, setSettings, settingsSaved, saveAllSettings, printers, printerForm, setPrinterForm, editPrinter, setEditPrinter, printJobs, loadingPrinters, printerMsg, fetchPrinters, fetchPrintJobs, savePrinter, deletePrinter, togglePrinterActive, retryJob } = settingsHook;
 
+  // Realtime sync
+  useRealtimeSync({
+    getToken,
+    setTableStatus: tablesHook.setTableStatus,
+    setTableOrders: tablesHook.setTableOrders,
+    setKitchenSent: tablesHook.setKitchenSent,
+    setItemNotes:   tablesHook.setItemNotes,
+  });
+
   // ── Derived ───────────────────────────────────────────────────────────────
   const tables      = tableList.length > 0 ? tableList.map(t => t.table_num) : Array.from({ length: TOTAL_TABLES }, (_, i) => i + 1);
   const currentItems = Object.values(tableOrders[currentTable] || {});
