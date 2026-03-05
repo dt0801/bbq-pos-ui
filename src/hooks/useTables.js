@@ -16,20 +16,22 @@ export function useTables(apiFetch) {
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
   const fetchTableStatus = useCallback(() => {
-    fetch(`${API_URL}/tables`)
-      .then(r => r.json())
+    apiFetch(`${API_URL}/tables`)
+      .then(r => r && r.json())
       .then(rows => {
+        if (!rows) return;
         const m = {};
         rows.forEach(r => { m[r.table_num] = r.status; });
         setTableStatus(m);
       }).catch(() => {});
-  }, []);
+  }, []); // eslint-disable-line
 
   const fetchTableList = useCallback(() => {
     Promise.all([
-      fetch(`${API_URL}/tables`).then(r => r.json()),
-      fetch(`${API_URL}/settings`).then(r => r.json()),
+      apiFetch(`${API_URL}/tables`).then(r => r && r.json()),
+      apiFetch(`${API_URL}/settings`).then(r => r && r.json()),
     ]).then(([rows, cfg]) => {
+      if (!rows || !cfg) return;
       const tot = Math.max(Number(cfg.total_tables) || 20, rows.reduce((mx,r) => Math.max(mx,r.table_num), 0));
       const dbMap = {};
       rows.forEach(r => { dbMap[r.table_num] = r.status; });
@@ -38,7 +40,7 @@ export function useTables(apiFetch) {
         status: dbMap[i + 1] || "PAID",
       })));
     }).catch(() => {});
-  }, []);
+  }, []); // eslint-disable-line
 
   // ── Cập nhật trạng thái bàn ───────────────────────────────────────────────
   const updateTableStatus = async (num, status) => {

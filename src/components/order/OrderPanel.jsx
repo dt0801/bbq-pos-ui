@@ -24,7 +24,7 @@ export default function OrderPanel({
             ) : "Chưa chọn bàn"}
           </div>
         </div>
-        {tableStatus[currentTable] === "OPEN" && (
+        {(tableStatus[currentTable] === "OPEN" || tableStatus[currentTable] === "PAYING") && currentItems.length > 0 && (
           <div className="flex gap-2">
             <button onClick={() => { setSplitModal(true); setSplitSelected([]); setSplitTarget(""); }} disabled={currentItems.length===0}
               className="flex items-center gap-1 px-2 py-1 bg-purple-500 hover:bg-purple-600 text-white text-xs font-bold rounded-lg transition disabled:opacity-40">
@@ -95,8 +95,8 @@ export default function OrderPanel({
           </button>
         )}
         {canPay && (
-          <button onClick={resetTable} disabled={currentItems.length>0||tableStatus[currentTable]==="OPEN"}
-            className={`w-full py-2.5 rounded-xl font-bold transition text-sm ${currentItems.length===0&&tableStatus[currentTable]!=="OPEN"?"bg-red-500 hover:bg-red-600 text-white":"bg-slate-600 opacity-50 cursor-not-allowed text-slate-400"}`}>
+          <button onClick={resetTable} disabled={tableStatus[currentTable]!=="PAYING"}
+            className={`w-full py-2.5 rounded-xl font-bold transition text-sm ${tableStatus[currentTable]==="PAYING"?"bg-red-500 hover:bg-red-600 text-white":"bg-slate-600 opacity-50 cursor-not-allowed text-slate-400"}`}>
             <i className="fa-solid fa-rotate mr-2" />Reset bàn
           </button>
         )}
