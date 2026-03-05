@@ -89,14 +89,14 @@ export default function OrderPanel({
           </button>
         )}
         {canPay && (
-          <button onClick={() => handlePayment({ currentTable, currentItems, total })} disabled={currentItems.length===0||tableStatus[currentTable]==="PAYING"}
-            className={`w-full py-2.5 rounded-xl font-bold transition text-white text-sm ${currentItems.length>0&&tableStatus[currentTable]!=="PAYING"?"bg-blue-500 hover:bg-blue-600":"bg-slate-600 opacity-50 cursor-not-allowed"}`}>
+          <button onClick={() => handlePayment({ currentTable, currentItems, total })} disabled={currentItems.length===0}
+            className={`w-full py-2.5 rounded-xl font-bold transition text-white text-sm ${currentItems.length>0?"bg-blue-500 hover:bg-blue-600":"bg-slate-600 opacity-50 cursor-not-allowed"}`}>
             <i className="fa-solid fa-money-bill-wave mr-2" />Thanh toán & In HĐ
           </button>
         )}
         {canPay && (
-          <button onClick={resetTable} disabled={tableStatus[currentTable]!=="PAYING"}
-            className={`w-full py-2.5 rounded-xl font-bold transition text-sm ${tableStatus[currentTable]==="PAYING"?"bg-red-500 hover:bg-red-600 text-white":"bg-slate-600 opacity-50 cursor-not-allowed text-slate-400"}`}>
+          <button onClick={resetTable} disabled={currentItems.length>0||tableStatus[currentTable]==="OPEN"}
+            className={`w-full py-2.5 rounded-xl font-bold transition text-sm ${currentItems.length===0&&tableStatus[currentTable]!=="OPEN"?"bg-red-500 hover:bg-red-600 text-white":"bg-slate-600 opacity-50 cursor-not-allowed text-slate-400"}`}>
             <i className="fa-solid fa-rotate mr-2" />Reset bàn
           </button>
         )}
