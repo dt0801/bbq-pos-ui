@@ -1,13 +1,13 @@
 // ─── OrderPanel — panel phải: danh sách đã order, tổng tiền, in ──────────────
 import React from "react";
-import { formatMoney, calcTotal } from "../../constants";
+import { formatMoney, calcTotal } from "./constants";
 
 export default function OrderPanel({
   currentTable, tableStatus, tableOrders,
   kitchenSent, itemNotes, setItemNotes, updateQty, setKitchenSent,
   canPay, darkMode, bgCard, textSub,
   setSplitModal, setSplitSelected, setSplitTarget, setShowTransferModal,
-  printKitchenTicket, printTamTinh, handlePayment, resetTable,
+  printKitchenTicket, printTamTinh, handlePayment, resetTable, saveOrders,
 }) {
   const currentItems = Object.values(tableOrders[currentTable] || {});
   const total        = calcTotal(tableOrders[currentTable]);
@@ -78,10 +78,23 @@ export default function OrderPanel({
         <div className="flex justify-between font-bold mb-1">
           <span>Total:</span><span className="text-green-400">{formatMoney(total)}</span>
         </div>
-        <button onClick={() => printKitchenTicket({ currentTable, currentItems, itemNotes, setKitchenSent })} disabled={currentItems.length===0}
-          className={`w-full py-2.5 rounded-xl font-bold transition text-white text-sm ${currentItems.length>0?"bg-orange-500 hover:bg-orange-600":"bg-slate-600 opacity-50 cursor-not-allowed"}`}>
-          <i className="fa-solid fa-fire-burner mr-2" />In phiếu bếp
-        </button>
+        {canPay ? (
+          // Thu ngân: In phiếu bếp
+          <button onClick={() => printKitchenTicket({ currentTable, currentItems, itemNotes, setKitchenSent })} disabled={currentItems.length===0}
+            className={`w-full py-2.5 rounded-xl font-bold transition text-white text-sm ${currentItems.length>0?"bg-orange-500 hover:bg-orange-600":"bg-slate-600 opacity-50 cursor-not-allowed"}`}>
+            <i className="fa-solid fa-fire-burner mr-2" />In phiếu bếp
+          </button>
+        ) : (
+          // Nhân viên: Xác nhận Order → sync realtime cho thu ngân
+          <button onClick={() => {
+            if (!currentTable || currentItems.length===0) return alert("Chưa có món!");
+            saveOrders(currentTable, tableOrders[currentTable] || {});
+            alert(`✅ Đã gửi order bàn ${currentTable}!`);
+          }} disabled={currentItems.length===0}
+            className={`w-full py-2.5 rounded-xl font-bold transition text-white text-sm ${currentItems.length>0?"bg-green-500 hover:bg-green-600":"bg-slate-600 opacity-50 cursor-not-allowed"}`}>
+            <i className="fa-solid fa-paper-plane mr-2" />Xác nhận Order
+          </button>
+        )}
         {canPay && (
           <button onClick={() => printTamTinh({ currentTable, currentItems })} disabled={currentItems.length===0}
             className={`w-full py-2.5 rounded-xl font-bold transition text-white text-sm ${currentItems.length>0?"bg-yellow-500 hover:bg-yellow-600":"bg-slate-600 opacity-50 cursor-not-allowed"}`}>

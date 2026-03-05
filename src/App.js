@@ -5,30 +5,30 @@ import { useAuth } from "./AuthContext";
 import LoginScreen from "./LoginScreen";
 
 import { filterMenu, TOTAL_TABLES } from "./constants";
-import { useMenu }     from "./hooks/useMenu";
-import { useTables }   from "./hooks/useTables";
-import { useBills }    from "./hooks/useBills";
-import { useStats }    from "./hooks/useStats";
-import { useStaff }    from "./hooks/useStaff";
-import { useSettings } from "./hooks/useSettings";
-import { useRealtimeSync } from "./hooks/useRealtimeSync";
+import { useMenu }        from "./hook/useMenu";
+import { useTables }      from "./hook/useTables";
+import { useBills }       from "./hook/useBills";
+import { useStats }       from "./hook/useStats";
+import { useStaff }       from "./hook/useStaff";
+import { useSettings }    from "./hook/useSettings";
+import { useRealtimeSync } from "./hook/useRealtimeSync";
 
-import Sidebar   from "./components/layout/Sidebar";
-import Header    from "./components/layout/Header";
-import MobileNav from "./components/layout/MobileNav";
+import Sidebar   from "./Sidebar";
+import Header    from "./Header";
+import MobileNav from "./MobileNav";
 
-import TableGrid  from "./components/order/TableGrid";
-import FilterBar  from "./components/order/FilterBar";
-import MenuGrid   from "./components/order/MenuGrid";
-import OrderPanel from "./components/order/OrderPanel";
+import TableGrid  from "./TableGrid";
+import FilterBar  from "./FilterBar";
+import MenuGrid   from "./MenuGrid";
+import OrderPanel from "./OrderPanel";
 
-import SplitModal    from "./components/modals/SplitModal";
-import TransferModal from "./components/modals/TransferModal";
+import SplitModal    from "./SplitModal";
+import TransferModal from "./TransferModal";
 
-import ManageView   from "./components/views/ManageView";
-import HistoryView  from "./components/views/HistoryView";
-import StatsView    from "./components/views/StatsView";
-import SettingsView from "./components/views/SettingsView";
+import ManageView   from "./ManageView";
+import HistoryView  from "./HistoryView";
+import StatsView    from "./StatsView";
+import SettingsView from "./SettingsView";
 
 function AppInner() {
   const { logout, user, getToken } = useAuth();
@@ -154,7 +154,7 @@ function AppInner() {
     setSplitModal, setSplitSelected, setSplitTarget, setShowTransferModal,
     printKitchenTicket, printTamTinh,
     handlePayment: (p) => handlePayment({ ...p, updateTableStatus }),
-    resetTable,
+    resetTable, saveOrders,
   };
 
   // ── Render ────────────────────────────────────────────────────────────────
