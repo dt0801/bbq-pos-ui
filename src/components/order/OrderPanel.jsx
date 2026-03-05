@@ -1,6 +1,6 @@
 // ─── OrderPanel — panel phải: danh sách đã order, tổng tiền, in ──────────────
 import React from "react";
-import { formatMoney, calcTotal } from "./constants";
+import { formatMoney, calcTotal } from "../../constants";
 
 export default function OrderPanel({
   currentTable, tableStatus, tableOrders,
