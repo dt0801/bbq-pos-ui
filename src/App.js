@@ -74,7 +74,7 @@ function AppInner() {
   const { menu, fetchMenu, newItem, setNewItem, file, setFile, editItem, setEditItem, editFile, setEditFile, addMenu, updateMenu, deleteMenu } = menuHook;
   const { tableList, tableStatus, tableOrders, currentTable, setCurrentTable, kitchenSent, setKitchenSent, itemNotes, setItemNotes, newTableNum, setNewTableNum, editingTable, setEditingTable, tableMsg, fetchTableStatus, fetchTableList, updateTableStatus, addItem, updateQty, saveOrders, cancelOrder, transferTable, executeSplit, resetTable, addTable, renameTable, deleteTable } = tablesHook;
   const { bills, selectedBill, setSelectedBill, historyDate, setHistoryDate, printerStatus, fetchBills, fetchBillDetail, printKitchenTicket, handlePayment, printTamTinh, reprintBill } = billsHook;
-  const { statsToday, statsMonthlyData, statsYearlyData, statsTab, setStatsTab, statsMonth, setStatsMonth, statsYear, setStatsYear, fetchStatsMonthly, fetchStatsDaily, fetchStatsYearly, fetchAllStats } = statsHook;
+  const { statsToday, statsMonthlyData, statsYearlyData, statsTab, setStatsTab, statsMonth, setStatsMonth, statsYear, setStatsYear, statsPickedDate, setStatsPickedDate, fetchStatsByDate, fetchStatsMonthly, fetchStatsDaily, fetchStatsYearly, fetchAllStats } = statsHook;
   const { staffList, staffForm, setStaffForm, staffEditing, staffShowForm, setStaffShowForm, staffError, fetchStaff, openCreateStaff, openEditStaff, submitStaff, deleteStaff } = staffHook;
   const { settings, setSettings, settingsSaved, saveAllSettings, printers, printerForm, setPrinterForm, editPrinter, setEditPrinter, printJobs, loadingPrinters, printerMsg, fetchPrinters, fetchPrintJobs, savePrinter, deletePrinter, togglePrinterActive, retryJob } = settingsHook;
 
@@ -133,6 +133,7 @@ function AppInner() {
   const statsProps = {
     statsToday, statsMonthlyData, statsYearlyData,
     statsTab, setStatsTab, statsMonth, setStatsMonth, statsYear, setStatsYear,
+    statsPickedDate, setStatsPickedDate, fetchStatsByDate,
     fetchStatsMonthly, fetchStatsDaily, fetchStatsYearly, ...theme,
   };
 
