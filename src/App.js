@@ -11,6 +11,7 @@ import { useBills }    from "./hooks/useBills";
 import { useStats }    from "./hooks/useStats";
 import { useStaff }    from "./hooks/useStaff";
 import { useSettings } from "./hooks/useSettings";
+import { useRealtimeSync } from "./hooks/useRealtimeSync";
 
 import Sidebar   from "./components/layout/Sidebar";
 import Header    from "./components/layout/Header";
@@ -76,6 +77,15 @@ function AppInner() {
   const { statsToday, statsMonthlyData, statsYearlyData, statsTab, setStatsTab, statsMonth, setStatsMonth, statsYear, setStatsYear, fetchStatsMonthly, fetchStatsDaily, fetchStatsYearly, fetchAllStats } = statsHook;
   const { staffList, staffForm, setStaffForm, staffEditing, staffShowForm, setStaffShowForm, staffError, fetchStaff, openCreateStaff, openEditStaff, submitStaff, deleteStaff } = staffHook;
   const { settings, setSettings, settingsSaved, saveAllSettings, printers, printerForm, setPrinterForm, editPrinter, setEditPrinter, printJobs, loadingPrinters, printerMsg, fetchPrinters, fetchPrintJobs, savePrinter, deletePrinter, togglePrinterActive, retryJob } = settingsHook;
+
+  // ── Realtime sync ─────────────────────────────────────────────────────────
+  useRealtimeSync({
+    getToken,
+    setTableStatus: tablesHook.setTableStatus,
+    setTableOrders: tablesHook.setTableOrders,
+    setKitchenSent: tablesHook.setKitchenSent,
+    setItemNotes:   tablesHook.setItemNotes,
+  });
 
   // ── Derived ───────────────────────────────────────────────────────────────
   const tables      = tableList.length > 0 ? tableList.map(t => t.table_num) : Array.from({ length: TOTAL_TABLES }, (_, i) => i + 1);
