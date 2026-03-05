@@ -82,19 +82,13 @@ export function useBills(settings, apiFetch) {
   };
 
   // ── In lại hóa đơn ────────────────────────────────────────────────────────
-  const reprintBill = async (bill) => {
+  const reprintBill = (bill) => {
     const fmt = n => new Intl.NumberFormat("vi-VN").format(n*1000)+"đ";
-    const browserPrint = (b) => {
-      const now = new Date(b.created_at).toLocaleString("vi-VN");
-      const win = window.open("","_blank","width=794,height=900");
-      win.document.write(`<html><head><title>Hóa Đơn</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:monospace;font-size:13px;width:100%;max-width:400px;margin:0 auto;padding:20px}h2{text-align:center;font-size:15px}table{width:100%;border-collapse:collapse;margin:6px 0}th{border-top:1px dashed #000;border-bottom:1px dashed #000;padding:4px 2px;font-size:12px}td{padding:3px 2px;font-size:12px}.total-row{border-top:1px dashed #000;margin-top:6px;padding-top:6px;display:flex;justify-content:space-between;font-weight:bold}.footer{text-align:center;margin-top:10px;font-size:11px;color:#555}</style></head><body><h2>${settings.store_name||"TIỆM NƯỚNG ĐÀ LẠT VÀ EM"}</h2><div style="text-align:center;font-size:11px;color:#555;margin-bottom:10px">${settings.store_address||""}<br/>${settings.store_phone||""}</div><div style="font-size:12px;margin-bottom:6px">HD#${b.id}·Bàn:<b>${b.table_num}</b></div><div style="font-size:12px;margin-bottom:6px">Ngày:${now}</div><table><thead><tr><th style="text-align:left">TÊN HÀNG</th><th>SL</th><th style="text-align:right">T.TIỀN</th></tr></thead><tbody>${(b.items||[]).map((it,i)=>`<tr><td>${i+1}.${it.name}</td><td style="text-align:center">${it.qty}</td><td style="text-align:right">${fmt(it.price*it.qty)}</td></tr>`).join("")}</tbody></table><div class="total-row"><span>THÀNH TIỀN</span><span>${fmt(b.total)}</span></div><div style="text-align:center;font-size:11px;margin-top:4px">***IN LẠI***</div><div class="footer">Cảm Ơn Quý Khách-Hẹn Gặp Lại!</div></body></html>`);
-      win.document.close(); win.focus();
-      setTimeout(() => { win.print(); win.close(); }, 300);
-    };
-    try {
-      const r = await apiFetch(`${API_URL}/print/bill/${bill.id}`, { method:"POST" });
-      if (!r.ok) throw new Error();
-    } catch { browserPrint(bill); }
+    const now = new Date(bill.created_at).toLocaleString("vi-VN");
+    const win = window.open("","_blank","width=794,height=900");
+    win.document.write(`<html><head><title>Hóa Đơn</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:monospace;font-size:13px;width:100%;max-width:400px;margin:0 auto;padding:20px}h2{text-align:center;font-size:15px;margin-bottom:2px}.sub{text-align:center;font-size:11px;color:#555;margin-bottom:10px}.info{font-size:12px;margin-bottom:6px}table{width:100%;border-collapse:collapse;margin:6px 0}th{border-top:1px dashed #000;border-bottom:1px dashed #000;padding:4px 2px;font-size:12px}td{padding:3px 2px;font-size:12px;vertical-align:top}.total-row{border-top:1px dashed #000;margin-top:6px;padding-top:6px;display:flex;justify-content:space-between;font-weight:bold;font-size:14px}.reprint{text-align:center;font-size:11px;margin-top:4px;color:#888}.footer{text-align:center;margin-top:10px;font-size:11px;color:#555}@media print{@page{size:80mm auto;margin:4mm}}</style></head><body><h2>${settings.store_name||"TIỆM NƯỚNG ĐÀ LẠT VÀ EM"}</h2><div class="sub">${settings.store_address||""}<br/>${settings.store_phone||""}</div><div class="info">HD#${bill.id} · Bàn: <b>${bill.table_num}</b></div><div class="info">Ngày: ${now}</div><table><thead><tr><th style="text-align:left">TÊN HÀNG</th><th style="text-align:center">SL</th><th style="text-align:right">T.TIỀN</th></tr></thead><tbody>${(bill.items||[]).map((it,i)=>`<tr><td>${i+1}. ${it.name}</td><td style="text-align:center">${it.qty}</td><td style="text-align:right">${fmt(it.price*it.qty)}</td></tr>`).join("")}</tbody></table><div class="total-row"><span>THÀNH TIỀN</span><span>${fmt(bill.total)}</span></div><div class="reprint">*** IN LẠI ***</div><div class="footer">${settings.footer||"Cảm Ơn Quý Khách - Hẹn Gặp Lại!"}</div></body></html>`);
+    win.document.close(); win.focus();
+    setTimeout(() => { win.print(); win.close(); }, 300);
   };
 
   return {
