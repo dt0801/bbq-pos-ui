@@ -42,6 +42,11 @@ export function useRealtimeSync({
           setTableStatus(prev => ({ ...prev, [msg.table_num]: msg.status }));
         }
 
+        if (msg.event === "ORDER_UPDATE") {
+          // Cập nhật orders bàn từ thiết bị khác
+          setTableOrders(prev => ({ ...prev, [msg.table_num]: msg.orders }));
+        }
+
         if (msg.event === "BILL_PAID") {
           // Bàn đã thanh toán → clear order + cập nhật status
           setTableStatus(prev => ({ ...prev, [msg.table_num]: "PAYING" }));

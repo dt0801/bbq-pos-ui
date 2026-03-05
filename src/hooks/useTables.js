@@ -1,5 +1,5 @@
 // ─── useTables — quản lý bàn, order, chuyển bàn, tách bàn ───────────────────
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { API_URL } from "../constants";
 
 export function useTables(apiFetch) {
@@ -14,15 +14,35 @@ export function useTables(apiFetch) {
   const [editingTable, setEditingTable] = useState(null);
   const [tableMsg,     setTableMsg]     = useState(null);
 
+  // ── Lưu orders lên server (debounced) ────────────────────────────────────
+  const saveOrdersTimer = useRef(null);
+  const saveOrders = useCallback((tableNum, orders) => {
+    clearTimeout(saveOrdersTimer.current);
+    saveOrdersTimer.current = setTimeout(() => {
+      apiFetch(`${API_URL}/tables/${tableNum}/orders`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orders }),
+      });
+    }, 500); // debounce 500ms
+  }, []); // eslint-disable-line
+
   // ── Fetch ──────────────────────────────────────────────────────────────────
   const fetchTableStatus = useCallback(() => {
     apiFetch(`${API_URL}/tables`)
       .then(r => r && r.json())
-      .then(rows => {
+      .then(async rows => {
         if (!rows) return;
         const m = {};
         rows.forEach(r => { m[r.table_num] = r.status; });
         setTableStatus(m);
+        // Load orders cho các bàn đang OPEN
+        const openTables = rows.filter(r => r.status === "OPEN" || r.status === "PAYING");
+        for (const t of openTables) {
+          if (t.orders && Object.keys(t.orders).length > 0) {
+            setTableOrders(prev => ({ ...prev, [t.table_num]: t.orders }));
+          }
+        }
       }).catch(() => {});
   }, []); // eslint-disable-line
 
@@ -57,11 +77,13 @@ export function useTables(apiFetch) {
     if (!currentTable) return alert("Vui lòng chọn bàn trước!");
     setTableOrders(prev => {
       const tbl = prev[currentTable] || {}, ex = tbl[item.id];
-      return { ...prev, [currentTable]: { ...tbl, [item.id]: ex ? { ...ex, qty: ex.qty + 1 } : { ...item, qty: 1 } } };
+      const updated = { ...prev, [currentTable]: { ...tbl, [item.id]: ex ? { ...ex, qty: ex.qty + 1 } : { ...item, qty: 1 } } };
+      saveOrders(currentTable, updated[currentTable]);
+      return updated;
     });
     if (!tableStatus[currentTable] || tableStatus[currentTable] === "PAID")
       updateTableStatus(currentTable, "OPEN"); // eslint-disable-line
-  }, [currentTable, tableStatus]); // eslint-disable-line
+  }, [currentTable, tableStatus, saveOrders]); // eslint-disable-line
 
   const updateQty = useCallback((itemId, action) => {
     if (!currentTable) return;
@@ -72,9 +94,11 @@ export function useTables(apiFetch) {
       const upd = { ...tbl };
       if (nq <= 0) delete upd[itemId];
       else upd[itemId] = { ...tbl[itemId], qty: nq };
-      return { ...prev, [currentTable]: upd };
+      const updated = { ...prev, [currentTable]: upd };
+      saveOrders(currentTable, upd);
+      return updated;
     });
-  }, [currentTable]);
+  }, [currentTable, saveOrders]);
 
   // ── Chuyển bàn ────────────────────────────────────────────────────────────
   const transferTable = async (target, setShowTransferModal) => {
@@ -118,6 +142,7 @@ export function useTables(apiFetch) {
     setTableOrders(p  => { const c = {...p}; delete c[currentTable]; return c; });
     setKitchenSent(p  => { const c = {...p}; delete c[currentTable]; return c; });
     setItemNotes(p    => { const c = {...p}; delete c[currentTable]; return c; });
+    saveOrders(currentTable, {});
     updateTableStatus(currentTable, "PAID");
   };
 
@@ -174,7 +199,7 @@ export function useTables(apiFetch) {
     tableMsg,
     fetchTableStatus, fetchTableList,
     updateTableStatus,
-    addItem, updateQty,
+    addItem, updateQty, saveOrders,
     transferTable, executeSplit, resetTable,
     addTable, renameTable, deleteTable,
   };
