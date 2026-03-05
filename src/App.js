@@ -738,14 +738,25 @@ function AppInner() {
   };
 
   const addMenu = async () => {
+    if (!newItem.name || !newItem.price) return alert("Vui lòng nhập tên và giá món!");
     const fd = new FormData();
     fd.append("name", newItem.name);
     fd.append("price", newItem.price);
     fd.append("type", newItem.type);
     if (file) fd.append("image", file);
-    await fetch(`${API_URL}/menu`, { method: "POST", body: fd });
+    const token = getToken();
+    const res = await fetch(`${API_URL}/menu`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: fd,
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      return alert(d.error || "Lỗi thêm món!");
+    }
     setNewItem({ name: "", price: "", type: "FOOD" });
     setFile(null);
+    setFilter("ALL");
     fetchMenu();
   };
   const updateMenu = async () => {
@@ -755,14 +766,27 @@ function AppInner() {
     fd.append("price", editItem.price);
     fd.append("type", editItem.type);
     if (editFile) fd.append("image", editFile);
-    await fetch(`${API_URL}/menu/${editItem.id}`, { method: "PUT", body: fd });
+    const token = getToken();
+    const res = await fetch(`${API_URL}/menu/${editItem.id}`, {
+      method: "PUT",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: fd,
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      return alert(d.error || "Lỗi cập nhật món!");
+    }
     setEditItem(null);
     setEditFile(null);
     fetchMenu();
   };
   const deleteMenu = async (id) => {
     if (!window.confirm("Xóa món này?")) return;
-    await fetch(`${API_URL}/menu/${id}`, { method: "DELETE" });
+    const token = getToken();
+    await fetch(`${API_URL}/menu/${id}`, {
+      method: "DELETE",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
     fetchMenu();
   };
   const showTableMsg = (type, txt) => {
