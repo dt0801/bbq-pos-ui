@@ -132,6 +132,9 @@ function AppInner() {
     printers, printerForm, setPrinterForm, editPrinter, setEditPrinter,
     printJobs, loadingPrinters, printerMsg,
     fetchPrinters, fetchPrintJobs, savePrinter, deletePrinter, togglePrinterActive, retryJob,
+    // staff (tab Tài khoản trong Settings)
+    staffList, staffForm, setStaffForm, staffEditing, staffShowForm, setStaffShowForm, staffError,
+    openCreateStaff, openEditStaff, submitStaff, deleteStaff,
     ...theme,
   };
 
