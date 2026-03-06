@@ -337,6 +337,14 @@ const vi = {
     billKitchen: 'Phiếu bếp',
   },
 
+  // ─── Modals ───────────────────────────────────────────────
+  modal: {
+    splitTitle: 'Tách bàn',
+    splitTarget: 'Chuyển sang bàn:',
+    splitConfirm: 'Chuyển',
+    transferTitle: 'Chuyển bàn',
+  },
+
   // ─── Realtime / Connection ────────────────────────────────
   connection: {
     connected: 'Đã kết nối',

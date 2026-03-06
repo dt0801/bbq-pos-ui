@@ -330,6 +330,14 @@ const de = {
     billKitchen: 'Küchenzettel',
   },
 
+  // ─── Modals ───────────────────────────────────────────────
+  modal: {
+    splitTitle: 'Tisch aufteilen',
+    splitTarget: 'Verschieben zu Tisch:',
+    splitConfirm: 'Verschieben',
+    transferTitle: 'Tisch übertragen',
+  },
+
   // ─── Realtime / Connection ────────────────────────────────
   connection: {
     connected: 'Verbunden',

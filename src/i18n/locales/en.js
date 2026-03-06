@@ -330,6 +330,14 @@ const en = {
     billKitchen: 'Kitchen Slip',
   },
 
+  // ─── Modals ───────────────────────────────────────────────
+  modal: {
+    splitTitle: 'Split Table',
+    splitTarget: 'Move to table:',
+    splitConfirm: 'Move',
+    transferTitle: 'Transfer Table',
+  },
+
   // ─── Realtime / Connection ────────────────────────────────
   connection: {
     connected: 'Connected',
