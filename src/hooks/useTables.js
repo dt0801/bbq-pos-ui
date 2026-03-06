@@ -101,9 +101,17 @@ export function useTables(apiFetch) {
     if (!currentTable || currentTable === target) return;
     if (tableStatus[target] === "OPEN" || tableStatus[target] === "PAYING")
       return alert(`Bàn ${target} đang có khách!`);
-    setTableOrders(p  => { const u = {...p};  u[target] = p[currentTable]||{}; delete u[currentTable]; return u; });
+
+    const movedOrders = tableOrders[currentTable] || {};
+
+    setTableOrders(p  => { const u = {...p};  u[target] = movedOrders; delete u[currentTable]; return u; });
     setKitchenSent(p  => { const u = {...p};  u[target] = p[currentTable]||{}; delete u[currentTable]; return u; });
     setItemNotes(p    => { const u = {...p};  u[target] = p[currentTable]||{}; delete u[currentTable]; return u; });
+
+    // ✅ Lưu lên server: bàn nguồn clear, bàn đích nhận orders
+    saveOrders(target, movedOrders);
+    saveOrders(currentTable, {});
+
     await updateTableStatus(currentTable, "PAID");
     await updateTableStatus(target, "OPEN");
     setTableStatus(p => ({ ...p, [currentTable]: "PAID", [target]: "OPEN" }));
