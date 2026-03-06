@@ -7,6 +7,8 @@ const vi = {
     stats: 'Thống kê',
     settings: 'Cài đặt',
     logout: 'Đăng xuất',
+    tables: 'Bàn',
+    menu: 'Thực đơn',
   },
 
   // ─── Common actions ───────────────────────────────────────
@@ -45,6 +47,7 @@ const vi = {
     loginButton: 'Đăng nhập',
     loginError: 'Sai tên đăng nhập hoặc mật khẩu',
     sessionExpired: 'Phiên đăng nhập đã hết hạn',
+    confirmLogout: 'Đăng xuất?',
   },
 
   // ─── Tables ───────────────────────────────────────────────

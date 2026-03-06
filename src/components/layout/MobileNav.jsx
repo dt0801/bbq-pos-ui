@@ -1,16 +1,18 @@
 // ─── MobileNav — bottom tab bar mobile ───────────────────────────────────────
 import React from "react";
+import { useT } from "../../i18n";
 
 export default function MobileNav({ mobileTab, setMobileTab, canPay, canManage, currentItems, darkMode, textSub }) {
+  const t = useT();
   const totalQty = currentItems.reduce((s, i) => s + i.qty, 0);
   const tabs = [
-    { tab:"tables",  icon:"fa-table-cells-large", label:"Bàn",      show:true      },
-    { tab:"menu",    icon:"fa-utensils",           label:"Thực đơn", show:true      },
-    { tab:"order",   icon:"fa-receipt",            label:"Order",    show:true      },
-    { tab:"history", icon:"fa-clock-rotate-left",  label:"Lịch sử", show:canPay    },
-    { tab:"stats",   icon:"fa-chart-line",         label:"Thống kê", show:canPay    },
-    { tab:"manage",  icon:"fa-gear",               label:"Quản lý",  show:canManage },
-  ].filter(t => t.show);
+    { tab:"tables",  icon:"fa-table-cells-large", label:t('nav.tables'),   show:true      },
+    { tab:"menu",    icon:"fa-utensils",           label:t('nav.menu'),     show:true      },
+    { tab:"order",   icon:"fa-receipt",            label:t('nav.order'),    show:true      },
+    { tab:"history", icon:"fa-clock-rotate-left",  label:t('nav.history'),  show:canPay    },
+    { tab:"stats",   icon:"fa-chart-line",         label:t('nav.stats'),    show:canPay    },
+    { tab:"manage",  icon:"fa-gear",               label:t('nav.manage'),   show:canManage },
+  ].filter(tb => tb.show);
   return (
     <div className={`bg-[#0b1220] border-t ${darkMode ? "border-slate-700" : "border-gray-300"} flex-shrink-0 safe-bottom`}>
       <div className="flex">

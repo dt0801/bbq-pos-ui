@@ -7,6 +7,8 @@ const en = {
     stats: 'Statistics',
     settings: 'Settings',
     logout: 'Log out',
+    tables: 'Tables',
+    menu: 'Menu',
   },
 
   // ─── Common actions ───────────────────────────────────────
@@ -45,6 +47,7 @@ const en = {
     loginButton: 'Sign In',
     loginError: 'Invalid username or password',
     sessionExpired: 'Your session has expired',
+    confirmLogout: 'Log out?',
   },
 
   // ─── Tables ───────────────────────────────────────────────

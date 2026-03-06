@@ -7,6 +7,8 @@ const de = {
     stats: 'Statistik',
     settings: 'Einstellungen',
     logout: 'Abmelden',
+    tables: 'Tische',
+    menu: 'Speisekarte',
   },
 
   // ─── Common actions ───────────────────────────────────────
@@ -45,6 +47,7 @@ const de = {
     loginButton: 'Anmelden',
     loginError: 'Ungültiger Benutzername oder Passwort',
     sessionExpired: 'Ihre Sitzung ist abgelaufen',
+    confirmLogout: 'Abmelden?',
   },
 
   // ─── Tables ───────────────────────────────────────────────
