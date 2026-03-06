@@ -12,8 +12,3 @@
 export { LanguageProvider, useLanguage, LANGUAGE_OPTIONS } from './LanguageContext';
 export { useT } from './useT';
 export { LanguageSwitcher } from './LanguageSwitcher';
-root.render(
-  <LanguageProvider>                          // thêm
-    <App />
-  </LanguageProvider>                         // thêm
-);
