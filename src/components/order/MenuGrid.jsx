@@ -1,8 +1,10 @@
 // ─── MenuGrid — lưới thực đơn + nút thêm/tăng/giảm ──────────────────────────
 import React from "react";
 import { API_URL, formatMoney } from "../../constants";
+import { useT } from "../../i18n";
 
 export default function MenuGrid({ filteredMenu, tableOrders, currentTable, addItem, updateQty, bgCard }) {
+  const t = useT();
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
       {filteredMenu.map(m => {
@@ -21,7 +23,7 @@ export default function MenuGrid({ filteredMenu, tableOrders, currentTable, addI
                 <button onClick={() => updateQty(m.id,"inc")} className="w-7 h-7 bg-slate-600 hover:bg-green-500 rounded-md font-bold transition">+</button>
               </div>
             ) : (
-              <button onClick={() => addItem(m)} className="mt-1 w-full bg-blue-600 hover:bg-blue-500 rounded-lg py-1.5 text-xs font-semibold transition">+ Thêm</button>
+              <button onClick={() => addItem(m)} className="mt-1 w-full bg-blue-600 hover:bg-blue-500 rounded-lg py-1.5 text-xs font-semibold transition">+ {t('order.addToOrder')}</button>
             )}
           </div>
         );

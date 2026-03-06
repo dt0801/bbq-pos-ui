@@ -1,6 +1,7 @@
 // ─── OrderPanel — panel phải: danh sách đã order, tổng tiền, in ──────────────
 import React from "react";
 import { formatMoney, calcTotal } from "../../constants";
+import { useT } from "../../i18n";
 
 export default function OrderPanel({
   currentTable, tableStatus, tableOrders,
@@ -9,8 +10,21 @@ export default function OrderPanel({
   setSplitModal, setSplitSelected, setSplitTarget, setShowTransferModal,
   printKitchenTicket, printTamTinh, handlePayment, resetTable, saveOrders, cancelOrder,
 }) {
+  const t = useT();
   const currentItems = Object.values(tableOrders[currentTable] || {});
   const total        = calcTotal(tableOrders[currentTable]);
+
+  const statusLabel = tableStatus[currentTable] === "OPEN"
+    ? t('order.statusOpen')
+    : tableStatus[currentTable] === "PAYING"
+    ? t('order.statusPaying')
+    : t('table.empty');
+
+  const statusColor = tableStatus[currentTable] === "OPEN"
+    ? "text-orange-400"
+    : tableStatus[currentTable] === "PAYING"
+    ? "text-purple-400"
+    : "text-slate-400";
 
   return (
     <div className="flex flex-col h-full">
@@ -20,19 +34,19 @@ export default function OrderPanel({
           <h2 className="text-base font-bold">ORDER</h2>
           <div className={`text-xs ${textSub} mt-0.5`}>
             {currentTable ? (
-              <span>Bàn {currentTable} · <span className={tableStatus[currentTable]==="OPEN"?"text-orange-400":tableStatus[currentTable]==="PAYING"?"text-purple-400":"text-slate-400"}>{tableStatus[currentTable]==="OPEN"?"Đang order":tableStatus[currentTable]==="PAYING"?"Chờ reset":"Trống"}</span></span>
-            ) : "Chưa chọn bàn"}
+              <span>{t('table.table')} {currentTable} · <span className={statusColor}>{statusLabel}</span></span>
+            ) : t('order.selectTable')}
           </div>
         </div>
         {(tableStatus[currentTable] === "OPEN" || tableStatus[currentTable] === "PAYING") && currentItems.length > 0 && (
           <div className="flex gap-2">
             <button onClick={() => { setSplitModal(true); setSplitSelected([]); setSplitTarget(""); }} disabled={currentItems.length===0}
               className="flex items-center gap-1 px-2 py-1 bg-purple-500 hover:bg-purple-600 text-white text-xs font-bold rounded-lg transition disabled:opacity-40">
-              <i className="fa-solid fa-code-branch text-xs" /> Tách
+              <i className="fa-solid fa-code-branch text-xs" /> {t('order.split')}
             </button>
             <button onClick={() => setShowTransferModal(true)}
               className="flex items-center gap-1 px-2 py-1 bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-bold rounded-lg transition">
-              <i className="fa-solid fa-right-left text-xs" /> Chuyển
+              <i className="fa-solid fa-right-left text-xs" /> {t('order.transfer')}
             </button>
           </div>
         )}
@@ -41,7 +55,7 @@ export default function OrderPanel({
       {/* Danh sách món */}
       <div className="flex-1 overflow-y-auto flex flex-col gap-1.5 mb-3">
         {currentItems.length === 0 ? (
-          <div className={`${textSub} text-center py-8 text-sm`}>Chưa có món nào</div>
+          <div className={`${textSub} text-center py-8 text-sm`}>{t('order.emptyOrder')}</div>
         ) : currentItems.map(item => {
           const sentQty = kitchenSent[currentTable]?.[item.id] || 0;
           const newQty  = item.qty - sentQty;
@@ -62,9 +76,9 @@ export default function OrderPanel({
                   <span className="font-bold text-sm w-5 text-center">{item.qty}</span>
                   <button onClick={() => updateQty(item.id,"inc")} className="w-6 h-6 bg-slate-600 hover:bg-green-500 rounded font-bold text-sm transition">+</button>
                 </div>
-                <span className={`text-xs ${textSub}`}>{formatMoney(item.price)}/món</span>
+                <span className={`text-xs ${textSub}`}>{formatMoney(item.price)}/{t('order.perItem')}</span>
               </div>
-              <input type="text" value={note} placeholder="Ghi chú..."
+              <input type="text" value={note} placeholder={t('order.itemNote')}
                 onChange={e => setItemNotes(p=>({...p,[currentTable]:{...(p[currentTable]||{}),[item.id]:e.target.value}}))}
                 className={`mt-2 w-full text-xs px-2 py-1 rounded-lg outline-none ${darkMode?"bg-slate-700 text-slate-300 placeholder-slate-500":"bg-gray-200 text-gray-600 placeholder-gray-400"}`}
               />
@@ -76,58 +90,59 @@ export default function OrderPanel({
       {/* Footer */}
       <div className={`border-t ${darkMode?"border-slate-600":"border-gray-300"} pt-3 flex flex-col gap-2`}>
         <div className="flex justify-between font-bold mb-1">
-          <span>Total:</span><span className="text-green-400">{formatMoney(total)}</span>
+          <span>{t('order.total')}:</span><span className="text-green-400">{formatMoney(total)}</span>
         </div>
 
-        {/* Hủy order — chỉ hiện cho cashier/admin */}
         {canPay && (
           <button onClick={() => {
               if (!currentTable || currentItems.length === 0) return;
-              if (!window.confirm(`Hủy toàn bộ order bàn ${currentTable}?`)) return;
+              if (!window.confirm(`${t('order.confirmCancel')} ${currentTable}?`)) return;
               cancelOrder(currentTable);
             }} disabled={currentItems.length === 0}
             className={`w-full py-2.5 rounded-xl font-bold transition text-sm ${currentItems.length > 0 ? "bg-red-600 hover:bg-red-700 text-white" : "bg-slate-600 opacity-50 cursor-not-allowed text-slate-400"}`}>
-            <i className="fa-solid fa-xmark mr-2" />Hủy Order
+            <i className="fa-solid fa-xmark mr-2" />{t('order.cancelOrder')}
           </button>
         )}
 
-        {/* In phiếu bếp — hiện cho tất cả */}
         <button onClick={() => printKitchenTicket({ currentTable, currentItems, itemNotes, setKitchenSent })} disabled={currentItems.length===0}
           className={`w-full py-2.5 rounded-xl font-bold transition text-white text-sm ${currentItems.length>0?"bg-orange-500 hover:bg-orange-600":"bg-slate-600 opacity-50 cursor-not-allowed"}`}>
-          <i className="fa-solid fa-fire-burner mr-2" />In phiếu bếp
+          <i className="fa-solid fa-fire-burner mr-2" />{t('order.printKitchen')}
         </button>
 
-        {/* Xác nhận Order — chỉ hiện cho waiter */}
         {!canPay && (
           <button onClick={() => {
-            if (!currentTable || currentItems.length===0) return alert("Chưa có món!");
+            if (!currentTable || currentItems.length===0) return alert(t('order.emptyOrder'));
             saveOrders(currentTable, tableOrders[currentTable] || {});
-            alert(`✅ Đã gửi order bàn ${currentTable}!`);
+            alert(`✅ ${t('order.orderSent')} ${currentTable}!`);
           }} disabled={currentItems.length===0}
             className={`w-full py-2.5 rounded-xl font-bold transition text-white text-sm ${currentItems.length>0?"bg-green-500 hover:bg-green-600":"bg-slate-600 opacity-50 cursor-not-allowed"}`}>
-            <i className="fa-solid fa-paper-plane mr-2" />Xác nhận Order
+            <i className="fa-solid fa-paper-plane mr-2" />{t('order.confirmOrder')}
           </button>
         )}
 
         {canPay && (
           <button onClick={() => printTamTinh({ currentTable, currentItems })} disabled={currentItems.length===0}
             className={`w-full py-2.5 rounded-xl font-bold transition text-white text-sm ${currentItems.length>0?"bg-yellow-500 hover:bg-yellow-600":"bg-slate-600 opacity-50 cursor-not-allowed"}`}>
-            <i className="fa-solid fa-file-invoice mr-2" />Tạm tính
+            <i className="fa-solid fa-file-invoice mr-2" />{t('order.preBill')}
           </button>
         )}
         {canPay && (
           <button onClick={() => handlePayment({ currentTable, currentItems, total })} disabled={currentItems.length===0}
             className={`w-full py-2.5 rounded-xl font-bold transition text-white text-sm ${currentItems.length>0?"bg-blue-500 hover:bg-blue-600":"bg-slate-600 opacity-50 cursor-not-allowed"}`}>
-            <i className="fa-solid fa-money-bill-wave mr-2" />Thanh toán & In HĐ
+            <i className="fa-solid fa-money-bill-wave mr-2" />{t('order.payAndPrint')}
           </button>
         )}
         {canPay && (
           <button onClick={resetTable} disabled={tableStatus[currentTable]!=="PAYING"}
             className={`w-full py-2.5 rounded-xl font-bold transition text-sm ${tableStatus[currentTable]==="PAYING"?"bg-red-500 hover:bg-red-600 text-white":"bg-slate-600 opacity-50 cursor-not-allowed text-slate-400"}`}>
-            <i className="fa-solid fa-rotate mr-2" />Reset bàn
+            <i className="fa-solid fa-rotate mr-2" />{t('order.resetTable')}
           </button>
         )}
-        {!canPay && <div className={`text-xs text-center py-2 ${textSub}`}><i className="fa-solid fa-lock mr-1" />Nhân viên order không có quyền thanh toán</div>}
+        {!canPay && (
+          <div className={`text-xs text-center py-2 ${textSub}`}>
+            <i className="fa-solid fa-lock mr-1" />{t('order.noPayPermission')}
+          </div>
+        )}
       </div>
     </div>
   );
