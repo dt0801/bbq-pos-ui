@@ -30,8 +30,6 @@ import HistoryView  from "./components/views/HistoryView";
 import StatsView    from "./components/views/StatsView";
 import SettingsView from "./components/views/SettingsView";
 
-import { LanguageProvider } from './i18n';
-
 function AppInner() {
   const { logout, user, getToken } = useAuth();
   const role = user?.role || "waiter";
