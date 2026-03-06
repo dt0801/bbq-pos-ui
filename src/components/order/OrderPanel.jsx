@@ -78,24 +78,27 @@ export default function OrderPanel({
         <div className="flex justify-between font-bold mb-1">
           <span>Total:</span><span className="text-green-400">{formatMoney(total)}</span>
         </div>
-        {/* Hủy order */}
-        <button onClick={() => {
-            if (!currentTable || currentItems.length === 0) return;
-            if (!window.confirm(`Hủy toàn bộ order bàn ${currentTable}?`)) return;
-            cancelOrder(currentTable);
-          }} disabled={currentItems.length === 0}
-          className={`w-full py-2.5 rounded-xl font-bold transition text-sm ${currentItems.length > 0 ? "bg-red-600 hover:bg-red-700 text-white" : "bg-slate-600 opacity-50 cursor-not-allowed text-slate-400"}`}>
-          <i className="fa-solid fa-xmark mr-2" />Hủy Order
+
+        {/* Hủy order — chỉ hiện cho cashier/admin */}
+        {canPay && (
+          <button onClick={() => {
+              if (!currentTable || currentItems.length === 0) return;
+              if (!window.confirm(`Hủy toàn bộ order bàn ${currentTable}?`)) return;
+              cancelOrder(currentTable);
+            }} disabled={currentItems.length === 0}
+            className={`w-full py-2.5 rounded-xl font-bold transition text-sm ${currentItems.length > 0 ? "bg-red-600 hover:bg-red-700 text-white" : "bg-slate-600 opacity-50 cursor-not-allowed text-slate-400"}`}>
+            <i className="fa-solid fa-xmark mr-2" />Hủy Order
+          </button>
+        )}
+
+        {/* In phiếu bếp — hiện cho tất cả */}
+        <button onClick={() => printKitchenTicket({ currentTable, currentItems, itemNotes, setKitchenSent })} disabled={currentItems.length===0}
+          className={`w-full py-2.5 rounded-xl font-bold transition text-white text-sm ${currentItems.length>0?"bg-orange-500 hover:bg-orange-600":"bg-slate-600 opacity-50 cursor-not-allowed"}`}>
+          <i className="fa-solid fa-fire-burner mr-2" />In phiếu bếp
         </button>
 
-        {canPay ? (
-          // Thu ngân: In phiếu bếp
-          <button onClick={() => printKitchenTicket({ currentTable, currentItems, itemNotes, setKitchenSent })} disabled={currentItems.length===0}
-            className={`w-full py-2.5 rounded-xl font-bold transition text-white text-sm ${currentItems.length>0?"bg-orange-500 hover:bg-orange-600":"bg-slate-600 opacity-50 cursor-not-allowed"}`}>
-            <i className="fa-solid fa-fire-burner mr-2" />In phiếu bếp
-          </button>
-        ) : (
-          // Nhân viên: Xác nhận Order → sync realtime cho thu ngân
+        {/* Xác nhận Order — chỉ hiện cho waiter */}
+        {!canPay && (
           <button onClick={() => {
             if (!currentTable || currentItems.length===0) return alert("Chưa có món!");
             saveOrders(currentTable, tableOrders[currentTable] || {});
@@ -105,6 +108,7 @@ export default function OrderPanel({
             <i className="fa-solid fa-paper-plane mr-2" />Xác nhận Order
           </button>
         )}
+
         {canPay && (
           <button onClick={() => printTamTinh({ currentTable, currentItems })} disabled={currentItems.length===0}
             className={`w-full py-2.5 rounded-xl font-bold transition text-white text-sm ${currentItems.length>0?"bg-yellow-500 hover:bg-yellow-600":"bg-slate-600 opacity-50 cursor-not-allowed"}`}>
