@@ -1,5 +1,6 @@
 import React from "react";
 import { formatMoney } from "../../constants";
+import { useT } from "../../i18n";
 
 const KPI = ({ icon, label, value, sub, accent, bgCard }) => (
   <div className={`${bgCard} rounded-2xl p-5 flex flex-col gap-3 relative overflow-hidden`}>
@@ -16,7 +17,7 @@ const KPI = ({ icon, label, value, sub, accent, bgCard }) => (
   </div>
 );
 
-const BarChart = ({ data, labelKey, valueKey, accent = "#10b981" }) => {
+const BarChart = ({ data, labelKey, valueKey, accent = "#10b981", billLabel }) => {
   const max = Math.max(...data.map(d => Number(d[valueKey]) || 0), 1);
   return (
     <div className="flex items-end gap-1 h-36 mt-2">
@@ -28,7 +29,7 @@ const BarChart = ({ data, labelKey, valueKey, accent = "#10b981" }) => {
               <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center z-20 pointer-events-none">
                 <div className="bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 whitespace-nowrap shadow-2xl">
                   <div className="font-bold" style={{ color: accent }}>{formatMoney(d[valueKey])}</div>
-                  <div className="text-slate-400">{d.bill_count} hóa đơn</div>
+                  <div className="text-slate-400">{d.bill_count} {billLabel}</div>
                 </div>
                 <div className="w-2 h-2 rotate-45 bg-slate-900 border-r border-b border-slate-700 -mt-1" />
               </div>
@@ -43,7 +44,7 @@ const BarChart = ({ data, labelKey, valueKey, accent = "#10b981" }) => {
   );
 };
 
-const TopItems = ({ items, label, bgCard }) => {
+const TopItems = ({ items, label, bgCard, portionsLabel, noDataLabel }) => {
   const totalRevenue = items?.reduce((s, i) => s + Number(i.total_revenue), 0) || 1;
   const medals = ["🥇", "🥈", "🥉"];
   const colors  = ["#f59e0b", "#94a3b8", "#ea580c", "#6366f1", "#10b981"];
@@ -53,7 +54,7 @@ const TopItems = ({ items, label, bgCard }) => {
         <i className="fa-solid fa-ranking-star mr-2 text-orange-400" />{label}
       </div>
       {!items?.length
-        ? <div className="text-sm text-slate-500 text-center py-6">Chưa có dữ liệu</div>
+        ? <div className="text-sm text-slate-500 text-center py-6">{noDataLabel}</div>
         : items.map((item, i) => {
           const revPct = (Number(item.total_revenue) / totalRevenue * 100).toFixed(1);
           const qtyPct = (item.total_qty / items[0].total_qty) * 100;
@@ -65,7 +66,7 @@ const TopItems = ({ items, label, bgCard }) => {
                 <span className="flex-1 text-sm font-semibold truncate">{item.name}</span>
                 <div className="flex flex-col items-end">
                   <span className="text-sm font-bold" style={{ color }}>{formatMoney(item.total_revenue)}</span>
-                  <span className="text-xs text-slate-500">{item.total_qty} phần · {revPct}%</span>
+                  <span className="text-xs text-slate-500">{item.total_qty} {portionsLabel} · {revPct}%</span>
                 </div>
               </div>
               <div className="ml-10 h-2 bg-slate-700/50 rounded-full overflow-hidden">
@@ -90,22 +91,26 @@ export default function StatsView({
   fetchStatsByDate, fetchStatsMonthly, fetchStatsDaily, fetchStatsYearly,
   bgCard, inputCls,
 }) {
+  const t = useT();
+
   const tabs = [
-    { id: "day",   label: "Ngày",  icon: "fa-calendar-day"  },
-    { id: "month", label: "Tháng", icon: "fa-calendar"      },
-    { id: "year",  label: "Năm",   icon: "fa-chart-bar"     },
+    { id: "day",   label: t('stats.tabDay'),   icon: "fa-calendar-day"  },
+    { id: "month", label: t('stats.tabMonth'), icon: "fa-calendar"      },
+    { id: "year",  label: t('stats.tabYear'),  icon: "fa-chart-bar"     },
   ];
 
   const dayLabel = statsPickedDate
-    ? isToday(statsPickedDate) ? "Hôm nay" : new Date(statsPickedDate).toLocaleDateString("vi-VN")
-    : "Ngày";
+    ? isToday(statsPickedDate) ? t('stats.today') : new Date(statsPickedDate).toLocaleDateString("vi-VN")
+    : t('stats.tabDay');
+
+  const noDataLabel = t('stats.noData');
 
   return (
     <div className="flex flex-col gap-4 overflow-y-auto pb-4">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h2 className="text-base font-bold flex items-center gap-2">
-          <i className="fa-solid fa-chart-line text-emerald-400" />Thống kê
+          <i className="fa-solid fa-chart-line text-emerald-400" />{t('stats.title')}
         </h2>
         <div className={`flex gap-1 p-1 rounded-xl ${bgCard}`}>
           {tabs.map(({ id, label, icon }) => (
@@ -126,13 +131,13 @@ export default function StatsView({
             max={new Date().toISOString().split("T")[0]}
             onChange={e => { setStatsPickedDate(e.target.value); fetchStatsByDate(e.target.value); }}
             className={`${inputCls} w-auto text-sm`} />
-          <button onClick={() => { const t = new Date().toISOString().split("T")[0]; setStatsPickedDate(t); fetchStatsByDate(t); }}
+          <button onClick={() => { const t2 = new Date().toISOString().split("T")[0]; setStatsPickedDate(t2); fetchStatsByDate(t2); }}
             className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition">
-            <i className="fa-solid fa-rotate-right mr-1" />Hôm nay
+            <i className="fa-solid fa-rotate-right mr-1" />{t('stats.refreshToday')}
           </button>
           <button onClick={() => { const y = new Date(); y.setDate(y.getDate()-1); const d = y.toISOString().split("T")[0]; setStatsPickedDate(d); fetchStatsByDate(d); }}
             className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 text-slate-300 hover:bg-slate-600 transition">
-            <i className="fa-solid fa-arrow-left mr-1" />Hôm qua
+            <i className="fa-solid fa-arrow-left mr-1" />{t('stats.yesterday')}
           </button>
         </div>
       )}
@@ -155,15 +160,17 @@ export default function StatsView({
       {statsTab === "day" && statsToday && (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <KPI bgCard={bgCard} icon="fa-receipt"     label="Hóa đơn"
-              value={statsToday.bill_count} sub={`Ngày ${new Date(statsPickedDate).toLocaleDateString("vi-VN")}`} accent="#60a5fa" />
-            <KPI bgCard={bgCard} icon="fa-sack-dollar" label="Doanh thu"
-              value={formatMoney(statsToday.revenue)} sub="Tổng doanh thu" accent="#34d399" />
-            <KPI bgCard={bgCard} icon="fa-fire"        label="Trung bình / HĐ"
+            <KPI bgCard={bgCard} icon="fa-receipt"     label={t('stats.bills')}
+              value={statsToday.bill_count} sub={`${new Date(statsPickedDate).toLocaleDateString("vi-VN")}`} accent="#60a5fa" />
+            <KPI bgCard={bgCard} icon="fa-sack-dollar" label={t('stats.revenue')}
+              value={formatMoney(statsToday.revenue)} sub={t('stats.revenueMonth')} accent="#34d399" />
+            <KPI bgCard={bgCard} icon="fa-fire"        label={t('stats.avgPerBill')}
               value={statsToday.bill_count ? formatMoney(Math.round(statsToday.revenue / statsToday.bill_count)) : "–"}
-              sub="Giá trị trung bình mỗi hóa đơn" accent="#fb923c" />
+              sub={t('stats.avgBillDesc')} accent="#fb923c" />
           </div>
-          <TopItems bgCard={bgCard} items={statsToday.top_items} label={`Top món — ${new Date(statsPickedDate).toLocaleDateString("vi-VN")}`} />
+          <TopItems bgCard={bgCard} items={statsToday.top_items}
+            label={`${t('stats.topItems')} — ${new Date(statsPickedDate).toLocaleDateString("vi-VN")}`}
+            portionsLabel={t('stats.portions')} noDataLabel={noDataLabel} />
         </>
       )}
 
@@ -171,23 +178,25 @@ export default function StatsView({
       {statsTab === "month" && (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <KPI bgCard={bgCard} icon="fa-receipt"     label="Hóa đơn tháng"
-              value={statsMonthlyData?.bill_count ?? "–"} sub={`Tháng ${statsMonth}`} accent="#60a5fa" />
-            <KPI bgCard={bgCard} icon="fa-sack-dollar" label="Doanh thu tháng"
-              value={formatMoney(statsMonthlyData?.revenue ?? 0)} sub={`Tháng ${statsMonth}`} accent="#34d399" />
-            <KPI bgCard={bgCard} icon="fa-fire"        label="Trung bình / ngày"
+            <KPI bgCard={bgCard} icon="fa-receipt"     label={t('stats.billsMonth')}
+              value={statsMonthlyData?.bill_count ?? "–"} sub={statsMonth} accent="#60a5fa" />
+            <KPI bgCard={bgCard} icon="fa-sack-dollar" label={t('stats.revenueMonth')}
+              value={formatMoney(statsMonthlyData?.revenue ?? 0)} sub={statsMonth} accent="#34d399" />
+            <KPI bgCard={bgCard} icon="fa-fire"        label={t('stats.avgPerDay')}
               value={statsMonthlyData?.days?.length ? formatMoney(Math.round(statsMonthlyData.revenue / statsMonthlyData.days.length)) : "–"}
-              sub="Doanh thu trung bình mỗi ngày" accent="#fb923c" />
+              sub={t('stats.avgDayDesc')} accent="#fb923c" />
           </div>
           <div className={`${bgCard} rounded-2xl p-5`}>
             <div className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">
-              <i className="fa-solid fa-chart-column mr-2 text-emerald-400" />Doanh thu theo ngày
+              <i className="fa-solid fa-chart-column mr-2 text-emerald-400" />{t('stats.revenueByDay')}
             </div>
             {statsMonthlyData?.days?.length
-              ? <BarChart data={statsMonthlyData.days.map(d => ({ ...d, label: d.date.slice(8) }))} labelKey="label" valueKey="revenue" accent="#34d399" />
-              : <div className="text-sm text-slate-500 text-center py-10">Chưa có dữ liệu</div>}
+              ? <BarChart data={statsMonthlyData.days.map(d => ({ ...d, label: d.date.slice(8) }))} labelKey="label" valueKey="revenue" accent="#34d399" billLabel={t('stats.billTooltip')} />
+              : <div className="text-sm text-slate-500 text-center py-10">{noDataLabel}</div>}
           </div>
-          <TopItems bgCard={bgCard} items={statsMonthlyData?.top_items} label={`Top món — tháng ${statsMonth}`} />
+          <TopItems bgCard={bgCard} items={statsMonthlyData?.top_items}
+            label={`${t('stats.topItems')} — ${t('stats.tabMonth').toLowerCase()} ${statsMonth}`}
+            portionsLabel={t('stats.portions')} noDataLabel={noDataLabel} />
         </>
       )}
 
@@ -195,23 +204,25 @@ export default function StatsView({
       {statsTab === "year" && (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <KPI bgCard={bgCard} icon="fa-receipt"     label={`Hóa đơn ${statsYear}`}
-              value={statsYearlyData?.bill_count ?? "–"} sub={`Năm ${statsYear}`} accent="#60a5fa" />
-            <KPI bgCard={bgCard} icon="fa-sack-dollar" label={`Doanh thu ${statsYear}`}
-              value={formatMoney(statsYearlyData?.revenue ?? 0)} sub={`Năm ${statsYear}`} accent="#34d399" />
-            <KPI bgCard={bgCard} icon="fa-fire"        label="Trung bình / tháng"
+            <KPI bgCard={bgCard} icon="fa-receipt"     label={`${t('stats.bills')} ${statsYear}`}
+              value={statsYearlyData?.bill_count ?? "–"} sub={statsYear} accent="#60a5fa" />
+            <KPI bgCard={bgCard} icon="fa-sack-dollar" label={`${t('stats.revenue')} ${statsYear}`}
+              value={formatMoney(statsYearlyData?.revenue ?? 0)} sub={statsYear} accent="#34d399" />
+            <KPI bgCard={bgCard} icon="fa-fire"        label={t('stats.avgPerMonth')}
               value={statsYearlyData?.months?.length ? formatMoney(Math.round(statsYearlyData.revenue / statsYearlyData.months.length)) : "–"}
-              sub="Doanh thu trung bình mỗi tháng" accent="#fb923c" />
+              sub={t('stats.avgMonthDesc')} accent="#fb923c" />
           </div>
           <div className={`${bgCard} rounded-2xl p-5`}>
             <div className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">
-              <i className="fa-solid fa-chart-column mr-2 text-emerald-400" />Doanh thu theo tháng
+              <i className="fa-solid fa-chart-column mr-2 text-emerald-400" />{t('stats.revenueByMonth')}
             </div>
             {statsYearlyData?.months?.length
-              ? <BarChart data={statsYearlyData.months.map(d => ({ ...d, label: "T" + d.month.slice(5) }))} labelKey="label" valueKey="revenue" accent="#34d399" />
-              : <div className="text-sm text-slate-500 text-center py-10">Chưa có dữ liệu</div>}
+              ? <BarChart data={statsYearlyData.months.map(d => ({ ...d, label: "T" + d.month.slice(5) }))} labelKey="label" valueKey="revenue" accent="#34d399" billLabel={t('stats.billTooltip')} />
+              : <div className="text-sm text-slate-500 text-center py-10">{noDataLabel}</div>}
           </div>
-          <TopItems bgCard={bgCard} items={statsYearlyData?.top_items} label={`Top món — năm ${statsYear}`} />
+          <TopItems bgCard={bgCard} items={statsYearlyData?.top_items}
+            label={`${t('stats.topItems')} — ${t('stats.tabYear').toLowerCase()} ${statsYear}`}
+            portionsLabel={t('stats.portions')} noDataLabel={noDataLabel} />
         </>
       )}
     </div>
