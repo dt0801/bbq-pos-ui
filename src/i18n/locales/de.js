@@ -111,7 +111,6 @@ const de = {
     change: 'Rückgeld',
     confirmCheckout: 'Zahlung bestätigen',
     printBill: 'Rechnung drucken',
-    addToOrder: 'Hinzufügen',
     itemCount: 'Artikel',
     perItem: 'Stück',
     statusOpen: 'Bestellung läuft',
@@ -125,7 +124,6 @@ const de = {
     resetTable: 'Tisch zurücksetzen',
     confirmCancel: 'Alle Bestellungen für Tisch stornieren',
     noPayPermission: 'Kellner können keine Zahlungen verarbeiten',
-    total: 'Gesamt',
   },
 
   // ─── Bill / Invoice ───────────────────────────────────────

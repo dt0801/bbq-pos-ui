@@ -1,10 +1,8 @@
 // ─── FilterBar — thanh lọc danh mục món ──────────────────────────────────────
 import React from "react";
 import { FILTERS } from "../../constants";
-import { useT } from "../../i18n";
 
 export default function FilterBar({ filter, setFilter, bgCard, textSub }) {
-  const t = useT();
   return (
     <div className="flex gap-1.5 mb-3 flex-wrap flex-shrink-0">
       {FILTERS.map(f => (

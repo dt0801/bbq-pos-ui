@@ -111,7 +111,6 @@ const en = {
     change: 'Change',
     confirmCheckout: 'Confirm Payment',
     printBill: 'Print Receipt',
-    addToOrder: 'Add',
     itemCount: 'items',
     perItem: 'item',
     statusOpen: 'Ordering',
@@ -125,7 +124,6 @@ const en = {
     resetTable: 'Reset Table',
     confirmCancel: 'Cancel all orders for table',
     noPayPermission: 'Waiters cannot process payments',
-    total: 'Total',
   },
 
   // ─── Bill / Invoice ───────────────────────────────────────

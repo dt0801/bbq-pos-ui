@@ -111,7 +111,6 @@ const vi = {
     change: 'Tiền thừa',
     confirmCheckout: 'Xác nhận thanh toán',
     printBill: 'In hóa đơn',
-    addToOrder: 'Thêm',
     itemCount: 'món',
     perItem: 'món',
     statusOpen: 'Đang order',
@@ -125,7 +124,6 @@ const vi = {
     resetTable: 'Reset bàn',
     confirmCancel: 'Hủy toàn bộ order bàn',
     noPayPermission: 'Nhân viên order không có quyền thanh toán',
-    total: 'Total',
   },
 
   // ─── Bill / Invoice ───────────────────────────────────────
