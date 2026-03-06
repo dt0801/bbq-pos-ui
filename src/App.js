@@ -281,8 +281,3 @@ export default function App() {
   if (!user)  return <LoginScreen />;
   return <AppInner />;
 }
-root.render(
-  <LanguageProvider>                          // thêm
-    <App />
-  </LanguageProvider>                         // thêm
-);
