@@ -114,21 +114,35 @@ export function useTables(apiFetch) {
   // ── Tách bàn ──────────────────────────────────────────────────────────────
   const executeSplit = ({ currentItems, splitTarget, splitSelected, setSplitModal, setSplitSelected, setSplitTarget }) => {
     if (!splitTarget || splitSelected.length === 0) return;
+
     const move = currentItems.filter(i =>  splitSelected.includes(i.id));
     const rest = currentItems.filter(i => !splitSelected.includes(i.id));
-    setTableOrders(p => {
-      const dest = { ...(p[splitTarget] || {}) };
-      move.forEach(it => {
-        if (dest[it.id]) dest[it.id] = { ...dest[it.id], qty: dest[it.id].qty + it.qty };
-        else dest[it.id] = { ...it };
-      });
-      const restObj = {};
-      rest.forEach(it => { restObj[it.id] = it; });
-      return { ...p, [splitTarget]: dest, [currentTable]: restObj };
+
+    // Tính trước orders của cả 2 bàn để saveOrders ngay sau đó
+    const destOrders = { ...(tableOrders[splitTarget] || {}) };
+    move.forEach(it => {
+      if (destOrders[it.id]) destOrders[it.id] = { ...destOrders[it.id], qty: destOrders[it.id].qty + it.qty };
+      else destOrders[it.id] = { ...it };
     });
-    setTableStatus(p => ({ ...p, [splitTarget]: "OPEN", ...(rest.length === 0 ? { [currentTable]: "PAID" } : {}) }));
+    const sourceOrders = {};
+    rest.forEach(it => { sourceOrders[it.id] = it; });
+
+    // Cập nhật local state
+    setTableOrders(p => ({ ...p, [splitTarget]: destOrders, [currentTable]: sourceOrders }));
+
+    // ✅ Lưu lên server ngay — không có bước này thì WebSocket sync sẽ ghi đè lại
+    saveOrders(splitTarget, destOrders);
+    saveOrders(currentTable, sourceOrders);
+
+    // Cập nhật trạng thái bàn
+    setTableStatus(p => ({
+      ...p,
+      [splitTarget]: "OPEN",
+      ...(rest.length === 0 ? { [currentTable]: "PAID" } : {}),
+    }));
     updateTableStatus(splitTarget, "OPEN");
     if (rest.length === 0) updateTableStatus(currentTable, "PAID");
+
     setSplitModal(false); setSplitSelected([]); setSplitTarget("");
   };
 
