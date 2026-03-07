@@ -1,10 +1,21 @@
 // ─── Sidebar — nav dọc desktop ────────────────────────────────────────────────
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useT, useLanguage, LANGUAGE_OPTIONS } from "../../i18n";
 
 export default function Sidebar({ sidebarView, setSidebarView, canPay, canManage, role, printerStatus, darkMode, setDarkMode, logout, textSub }) {
   const t = useT();
   const { lang, changeLanguage } = useLanguage();
+  const [langOpen, setLangOpen] = useState(false);
+  const langRef = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (langRef.current && !langRef.current.contains(e.target)) setLangOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const currentFlag = LANGUAGE_OPTIONS.find(o => o.code === lang)?.flag || "🌐";
+
   const NavItem = ({ icon, label, view }) => (
     <div onClick={() => setSidebarView(view)} title={label}
       className={`flex flex-col items-center cursor-pointer p-2 rounded-xl transition w-full ${sidebarView === view ? "bg-blue-600 text-white" : `${textSub} hover:bg-slate-700`}`}>
@@ -27,15 +38,24 @@ export default function Sidebar({ sidebarView, setSidebarView, canPay, canManage
       {canPay    && <NavItem icon={<i className="fa-solid fa-chart-line"        />} label={t('nav.stats')}   view="stats"    />}
       {role === "admin" && <NavItem icon={<i className="fa-solid fa-gear" />}       label={t('nav.settings')}view="settings" />}
       <div className="mt-auto flex flex-col items-center gap-2">
-        {/* ── Language switcher compact ── */}
-        <div className="flex flex-col items-center gap-1 pb-1">
-          {LANGUAGE_OPTIONS.map(opt => (
-            <button key={opt.code} onClick={() => changeLanguage(opt.code)}
-              title={opt.label}
-              className={`text-base leading-none transition-all ${lang === opt.code ? "opacity-100 scale-110" : "opacity-35 hover:opacity-70"}`}>
-              {opt.flag}
-            </button>
-          ))}
+        {/* ── Language popup ── */}
+        <div ref={langRef} className="relative flex flex-col items-center">
+          <button onClick={() => setLangOpen(o => !o)} title={t('settings.languageLabel')}
+            className={`cursor-pointer p-2 rounded-xl transition text-lg ${langOpen ? "bg-slate-700 text-white" : `${textSub} hover:bg-slate-700`}`}>
+            {currentFlag}
+          </button>
+          {langOpen && (
+            <div className="absolute bottom-full left-full mb-1 ml-1 bg-[#1e293b] border border-slate-700 rounded-xl shadow-2xl z-50 py-1 min-w-max">
+              {LANGUAGE_OPTIONS.map(opt => (
+                <button key={opt.code} onClick={() => { changeLanguage(opt.code); setLangOpen(false); }}
+                  className={`flex items-center gap-2 w-full px-4 py-2 text-sm transition hover:bg-slate-700 ${lang === opt.code ? "text-orange-400 font-semibold" : "text-slate-300"}`}>
+                  <span className="text-base">{opt.flag}</span>
+                  <span>{opt.label}</span>
+                  {lang === opt.code && <i className="fa-solid fa-check text-xs ml-auto" />}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         <div title={printerTitle} className="flex flex-col items-center gap-1">
           <span className="text-lg"><i className="fa-solid fa-print" /></span>
