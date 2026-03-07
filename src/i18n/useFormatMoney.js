@@ -3,6 +3,6 @@ import { useLanguage } from "./LanguageContext";
 import { formatMoneyWithCurrency } from "../constants";
 
 export function useFormatMoney() {
-  const { language } = useLanguage();
-  return (n) => formatMoneyWithCurrency(n, language);
+  const { lang } = useLanguage();
+  return (n) => formatMoneyWithCurrency(n, lang);
 }
