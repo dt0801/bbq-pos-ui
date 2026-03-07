@@ -1,7 +1,7 @@
 // ─── OrderPanel — panel phải: danh sách đã order, tổng tiền, in ──────────────
 import React from "react";
-import { formatMoney, calcTotal } from "../../constants";
-import { useT } from "../../i18n";
+import { calcTotal } from "../../constants";
+import { useT, useFormatMoney } from "../../i18n";
 
 export default function OrderPanel({
   currentTable, tableStatus, tableOrders,
@@ -11,6 +11,7 @@ export default function OrderPanel({
   printKitchenTicket, printTamTinh, handlePayment, resetTable, saveOrders, cancelOrder,
 }) {
   const t = useT();
+  const formatMoney = useFormatMoney();
   const currentItems = Object.values(tableOrders[currentTable] || {});
   const total        = calcTotal(tableOrders[currentTable]);
 

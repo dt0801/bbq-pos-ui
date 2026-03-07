@@ -21,7 +21,32 @@ export const FILTERS = [
   { key: "DRINK",    label: "Đồ uống"   },
 ];
 
-// ─── Format tiền VND ─────────────────────────────────────────────────────────
+// ─── Cấu hình tiền tệ theo ngôn ngữ ─────────────────────────────────────────
+// Giá trong DB lưu đơn vị nghìn VND (vd: 50 = 50.000đ)
+// Tỷ giá tham khảo (cập nhật thủ công hoặc gọi API nếu cần)
+export const CURRENCY_CONFIG = {
+  vi: { code: "VND", locale: "vi-VN", symbol: "đ",  rate: 1,       multiplier: 1000, position: "after"  },
+  en: { code: "USD", locale: "en-US", symbol: "$",  rate: 25000,   multiplier: 1000, position: "before" },
+  de: { code: "EUR", locale: "de-DE", symbol: "€",  rate: 27000,   multiplier: 1000, position: "after"  },
+};
+
+// ─── Format tiền theo ngôn ngữ ───────────────────────────────────────────────
+export const formatMoneyWithCurrency = (n, lang = "vi") => {
+  const cfg = CURRENCY_CONFIG[lang] || CURRENCY_CONFIG.vi;
+  const actualVND = n * cfg.multiplier;          // n * 1000 = VND thực
+  const amount    = actualVND / cfg.rate;        // quy đổi sang tiền tệ
+
+  if (lang === "vi") {
+    return new Intl.NumberFormat("vi-VN").format(actualVND) + "đ";
+  }
+  return new Intl.NumberFormat(cfg.locale, {
+    style: "currency", currency: cfg.code,
+    minimumFractionDigits: lang === "en" ? 2 : 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+};
+
+// ─── Format tiền VND (mặc định — giữ để không break code cũ) ─────────────────
 export const formatMoney = (n) =>
   new Intl.NumberFormat("vi-VN").format(n * 1000) + "đ";
 

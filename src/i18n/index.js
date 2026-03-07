@@ -12,3 +12,4 @@
 export { LanguageProvider, useLanguage, LANGUAGE_OPTIONS } from './LanguageContext';
 export { useT } from './useT';
 export { LanguageSwitcher } from './LanguageSwitcher';
+export { useFormatMoney } from './useFormatMoney';

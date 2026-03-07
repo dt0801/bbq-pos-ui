@@ -1,6 +1,5 @@
 import React from "react";
-import { formatMoney } from "../../constants";
-import { useT } from "../../i18n";
+import { useT, useFormatMoney } from "../../i18n";
 
 const KPI = ({ icon, label, value, sub, accent, bgCard }) => (
   <div className={`${bgCard} rounded-2xl p-5 flex flex-col gap-3 relative overflow-hidden`}>
@@ -46,6 +45,7 @@ const BarChart = ({ data, labelKey, valueKey, accent = "#10b981" }) => {
 
 const TopItems = ({ items, label, bgCard }) => {
   const t = useT();
+  const formatMoney = useFormatMoney();
   const totalRevenue = items?.reduce((s, i) => s + Number(i.total_revenue), 0) || 1;
   const medals = ["🥇", "🥈", "🥉"];
   const colors  = ["#f59e0b", "#94a3b8", "#ea580c", "#6366f1", "#10b981"];
@@ -84,6 +84,7 @@ const TopItems = ({ items, label, bgCard }) => {
 // ── [MỚI] Bảng thống kê hiệu suất nhân viên ─────────────────────────────────
 const StaffTable = ({ data, label, bgCard }) => {
   const t = useT();
+  const formatMoney = useFormatMoney();
   const staffColors = ["#f59e0b", "#60a5fa", "#34d399", "#fb923c", "#a78bfa", "#f472b6"];
   const maxBills = Math.max(...(data?.map(s => s.bill_count) || [1]), 1);
 

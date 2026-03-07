@@ -1,7 +1,7 @@
 // ─── ManageView — thêm/sửa món, quản lý bàn, nhân viên ──────────────────────
 import React from "react";
-import { API_URL, formatMoney } from "../../constants";
-import { useT } from "../../i18n";
+import { API_URL } from "../../constants";
+import { useT, useFormatMoney } from "../../i18n";
 
 export default function ManageView({
   role, manageTab, setManageTab,
@@ -11,6 +11,7 @@ export default function ManageView({
   darkMode, bgCard, textSub, inputCls,
 }) {
   const t = useT();
+  const formatMoney = useFormatMoney();
 
   const tabs = [
     ["add",   <><i className="fa-solid fa-plus mr-1"/>{t('manage.tabAddItem')}</>],

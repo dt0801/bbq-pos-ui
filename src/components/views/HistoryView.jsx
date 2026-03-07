@@ -1,10 +1,10 @@
 // ─── HistoryView — lịch sử hóa đơn theo ngày ────────────────────────────────
 import React from "react";
-import { formatMoney } from "../../constants";
-import { useT } from "../../i18n";
+import { useT, useFormatMoney } from "../../i18n";
 
 export default function HistoryView({ bills, selectedBill, setSelectedBill, historyDate, setHistoryDate, fetchBills, fetchBillDetail, reprintBill, settings, bgCard, textSub, inputCls }) {
   const t = useT();
+  const formatMoney = useFormatMoney();
 
   return (
     <div className="flex flex-col h-full overflow-hidden">

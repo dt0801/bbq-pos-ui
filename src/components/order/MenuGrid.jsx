@@ -1,10 +1,11 @@
 // ─── MenuGrid — lưới thực đơn + nút thêm/tăng/giảm ──────────────────────────
 import React from "react";
-import { API_URL, formatMoney } from "../../constants";
-import { useT } from "../../i18n";
+import { API_URL } from "../../constants";
+import { useT, useFormatMoney } from "../../i18n";
 
 export default function MenuGrid({ filteredMenu, tableOrders, currentTable, addItem, updateQty, bgCard }) {
   const t = useT();
+  const formatMoney = useFormatMoney();
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
       {filteredMenu.map(m => {
