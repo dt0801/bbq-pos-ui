@@ -426,9 +426,9 @@ function AccountTab({ staffList, staffForm, setStaffForm, staffEditing, staffSho
           <h3 className="font-bold text-sm"><i className="fa-solid fa-users mr-2 text-blue-400"/>{t('settings.accountList')}</h3>
           <button onClick={openCreateStaff} className="flex items-center gap-1.5 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold rounded-xl transition"><i className="fa-solid fa-plus"/>{t('common.add')}</button>
         </div>
-        {staffList.length===0
+        {(staffList||[]).length===0
           ?<div className={`text-sm ${textSub} text-center py-6`}>{t('settings.noAccounts')}</div>
-          :staffList.map(u=>{
+          :(staffList||[]).map(u=>{
             const rc=u.role==="admin"?"text-red-400 bg-red-500/10":u.role==="cashier"?"text-yellow-400 bg-yellow-500/10":"text-green-400 bg-green-500/10";
             const rl=u.role==="admin"?t('manage.roleAdmin'):u.role==="cashier"?t('manage.roleCashier'):t('manage.roleWaiter');
             return(
