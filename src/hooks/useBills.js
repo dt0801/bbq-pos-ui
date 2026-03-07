@@ -57,7 +57,7 @@ export function useBills(settings, apiFetch) {
     const billRes = await apiFetch(`${API_URL}/bills`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ table_num: currentTable, total, items: currentItems.map(i => ({ name: i.name, price: i.price, qty: i.qty })) })
+      body: JSON.stringify({ table_num: currentTable, total: Math.round(total), items: currentItems.map(i => ({ name: i.name, price: Math.round(i.price), qty: i.qty })) })
     });
     if (!billRes || !billRes.ok) {
       const err = billRes ? await billRes.json().catch(() => ({})) : {};
