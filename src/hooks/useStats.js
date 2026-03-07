@@ -15,13 +15,10 @@ export function useStats() {
   const [staffStatsMonth, setStaffStatsMonth] = useState([]);
   const [staffStatsYear,  setStaffStatsYear]  = useState([]);
 
-  const getToken = () => localStorage.getItem("token") || sessionStorage.getItem("token") || "";
-  const authHeaders = () => ({ Authorization: `Bearer ${getToken()}` });
-
   const fetchStatsByDate  = useCallback((date) => {
     fetch(`${API_URL}/stats/today?date=${date}`).then(r=>r.json()).then(setStatsToday).catch(()=>{});
     // ── [MỚI] Fetch nhân viên theo ngày ──────────────────────────────────────
-    fetch(`${API_URL}/stats/staff/day?date=${date}`, { headers: authHeaders() })
+    fetch(`${API_URL}/stats/staff/day?date=${date}`)
       .then(r=>r.json()).then(d => Array.isArray(d) && setStaffStatsDay(d)).catch(()=>{});
   }, []);
 
@@ -30,7 +27,7 @@ export function useStats() {
     setStatsPickedDate(today);
     fetch(`${API_URL}/stats/today?date=${today}`).then(r=>r.json()).then(setStatsToday).catch(()=>{});
     // ── [MỚI] ─────────────────────────────────────────────────────────────────
-    fetch(`${API_URL}/stats/staff/day?date=${today}`, { headers: authHeaders() })
+    fetch(`${API_URL}/stats/staff/day?date=${today}`)
       .then(r=>r.json()).then(d => Array.isArray(d) && setStaffStatsDay(d)).catch(()=>{});
   }, []);
 
@@ -41,14 +38,14 @@ export function useStats() {
   const fetchStatsMonthly = useCallback((m) => {
     fetch(`${API_URL}/stats/monthly?month=${m}`).then(r=>r.json()).then(setStatsMonthlyData).catch(()=>{});
     // ── [MỚI] Fetch nhân viên theo tháng ────────────────────────────────────
-    fetch(`${API_URL}/stats/staff/month?month=${m}`, { headers: authHeaders() })
+    fetch(`${API_URL}/stats/staff/month?month=${m}`)
       .then(r=>r.json()).then(d => Array.isArray(d) && setStaffStatsMonth(d)).catch(()=>{});
   }, []);
 
   const fetchStatsYearly  = useCallback((y) => {
     fetch(`${API_URL}/stats/yearly?year=${y}`).then(r=>r.json()).then(setStatsYearlyData).catch(()=>{});
     // ── [MỚI] Fetch nhân viên theo năm ──────────────────────────────────────
-    fetch(`${API_URL}/stats/staff/year?year=${y}`, { headers: authHeaders() })
+    fetch(`${API_URL}/stats/staff/year?year=${y}`)
       .then(r=>r.json()).then(d => Array.isArray(d) && setStaffStatsYear(d)).catch(()=>{});
   }, []);
 
