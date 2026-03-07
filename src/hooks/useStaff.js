@@ -2,22 +2,19 @@
 import { useState, useCallback } from "react";
 import { API_URL } from "../constants";
 
-export function useStaff(getToken) {
+export function useStaff(apiFetch) {
   const [staffList,     setStaffList]     = useState([]);
   const [staffForm,     setStaffForm]     = useState({ username:"", password:"", role:"waiter", full_name:"" });
   const [staffEditing,  setStaffEditing]  = useState(null);
   const [staffShowForm, setStaffShowForm] = useState(false);
   const [staffError,    setStaffError]    = useState("");
 
-  const authHeaders = () => ({ "Content-Type":"application/json", Authorization:`Bearer ${getToken()}` });
-
   const fetchStaff = useCallback(() => {
-    const headers = { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` };
-    fetch(`${API_URL}/users`, { headers })
-      .then(r => r.ok ? r.json() : [])
+    apiFetch(`${API_URL}/users`)
+      .then(r => r && r.ok ? r.json() : [])
       .then(d => Array.isArray(d) && setStaffList(d))
       .catch(() => {});
-  }, [getToken]); // eslint-disable-line
+  }, [apiFetch]);
 
   const openCreateStaff = () => {
     setStaffEditing(null);
@@ -38,20 +35,28 @@ export function useStaff(getToken) {
       if (staffEditing) {
         const body = { full_name:staffForm.full_name, role:staffForm.role, active:staffForm.active };
         if (staffForm.password) body.password = staffForm.password;
-        res = await fetch(`${API_URL}/users/${staffEditing.id}`, { method:"PUT", headers:authHeaders(), body:JSON.stringify(body) });
+        res = await apiFetch(`${API_URL}/users/${staffEditing.id}`, {
+          method: "PUT",
+          headers: { "Content-Type":"application/json" },
+          body: JSON.stringify(body),
+        });
       } else {
         if (!staffForm.username || !staffForm.password) return setStaffError("Vui lòng điền đầy đủ thông tin");
-        res = await fetch(`${API_URL}/users`, { method:"POST", headers:authHeaders(), body:JSON.stringify(staffForm) });
+        res = await apiFetch(`${API_URL}/users`, {
+          method: "POST",
+          headers: { "Content-Type":"application/json" },
+          body: JSON.stringify(staffForm),
+        });
       }
-      const d = await res.json();
-      if (!res.ok) return setStaffError(d.error || "Lỗi không xác định");
+      const d = res && await res.json();
+      if (!res || !res.ok) return setStaffError(d?.error || "Lỗi không xác định");
       setStaffShowForm(false); fetchStaff();
     } catch(e) { setStaffError(e.message); }
   };
 
   const deleteStaff = async (u) => {
     if (!window.confirm(`Xóa tài khoản "${u.username}"?`)) return;
-    await fetch(`${API_URL}/users/${u.id}`, { method:"DELETE", headers:authHeaders() });
+    await apiFetch(`${API_URL}/users/${u.id}`, { method:"DELETE" });
     fetchStaff();
   };
 
