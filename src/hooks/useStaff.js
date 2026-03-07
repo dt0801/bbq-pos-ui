@@ -12,7 +12,10 @@ export function useStaff(getToken) {
   const authHeaders = () => ({ "Content-Type":"application/json", Authorization:`Bearer ${getToken()}` });
 
   const fetchStaff = useCallback(() => {
-    fetch(`${API_URL}/users`, { headers: authHeaders() }).then(r=>r.json()).then(setStaffList).catch(()=>{});
+    fetch(`${API_URL}/users`, { headers: authHeaders() })
+      .then(r => r.ok ? r.json() : [])
+      .then(d => Array.isArray(d) && setStaffList(d))
+      .catch(() => {});
   }, []); // eslint-disable-line
 
   const openCreateStaff = () => {
