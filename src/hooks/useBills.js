@@ -52,7 +52,18 @@ export function useBills(settings, apiFetch) {
   // ── Thanh toán & in hóa đơn ───────────────────────────────────────────────
   const handlePayment = async ({ currentTable, currentItems, total, updateTableStatus }) => {
     if (!currentTable || currentItems.length === 0) return alert("Bàn chưa có món!");
-    await apiFetch(`${API_URL}/bills`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ table_num:currentTable, total, items:currentItems.map(i=>({name:i.name,price:i.price,qty:i.qty})) }) });
+    
+    // ── Lưu bill vào DB — kiểm tra lỗi rõ ràng ───────────────────────────────
+    const billRes = await apiFetch(`${API_URL}/bills`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ table_num: currentTable, total, items: currentItems.map(i => ({ name: i.name, price: i.price, qty: i.qty })) })
+    });
+    if (!billRes || !billRes.ok) {
+      const err = billRes ? await billRes.json().catch(() => ({})) : {};
+      alert(`Lỗi thanh toán: ${err.error || "Không thể kết nối server"}`);
+      return;
+    }
     const browserPrint = () => {
       const html = generateBillHTML({ settings, type:"bill", tableNum:currentTable, items:currentItems, total });
       const win = window.open("","_blank","width=794,height=900");
