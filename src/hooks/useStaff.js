@@ -12,11 +12,12 @@ export function useStaff(getToken) {
   const authHeaders = () => ({ "Content-Type":"application/json", Authorization:`Bearer ${getToken()}` });
 
   const fetchStaff = useCallback(() => {
-    fetch(`${API_URL}/users`, { headers: authHeaders() })
+    const headers = { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` };
+    fetch(`${API_URL}/users`, { headers })
       .then(r => r.ok ? r.json() : [])
       .then(d => Array.isArray(d) && setStaffList(d))
       .catch(() => {});
-  }, []); // eslint-disable-line
+  }, [getToken]); // eslint-disable-line
 
   const openCreateStaff = () => {
     setStaffEditing(null);

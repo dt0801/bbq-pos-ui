@@ -17,7 +17,6 @@ export default function ManageView({
     ["add",   <><i className="fa-solid fa-plus mr-1"/>{t('manage.tabAddItem')}</>],
     ["edit",  <><i className="fa-solid fa-pen-to-square mr-1"/>{t('manage.tabEditItem')}</>],
     ["table", <><i className="fa-solid fa-chair mr-1"/>{t('manage.tabTable')}</>],
-    ...(role==="admin" ? [["staff", <><i className="fa-solid fa-users mr-1"/>{t('manage.tabStaff')}</>]] : []),
   ];
 
   return (
@@ -130,61 +129,6 @@ export default function ManageView({
         </div>
       )}
 
-      {/* ── Nhân viên (admin) ── */}
-      {manageTab==="staff" && role==="admin" && (
-        <div className="flex flex-col gap-4 overflow-y-auto pb-4 max-w-lg">
-          {staffShowForm && (
-            <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-              <div className={`${bgCard} rounded-2xl p-6 w-full max-w-sm flex flex-col gap-4`}>
-                <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-base">{staffEditing ? t('manage.editAccount') : t('manage.createAccount')}</h3>
-                  <button onClick={()=>setStaffShowForm(false)} className={`${textSub} hover:text-white text-xl`}><i className="fa-solid fa-xmark"/></button>
-                </div>
-                {!staffEditing && <div><label className={`block text-sm ${textSub} mb-1`}>{t('manage.usernameLabel')}</label><input value={staffForm.username} onChange={e=>setStaffForm(f=>({...f,username:e.target.value}))} placeholder="vd: nhanvien1" className={inputCls} /></div>}
-                <div><label className={`block text-sm ${textSub} mb-1`}>{t('manage.fullNameLabel')}</label><input value={staffForm.full_name} onChange={e=>setStaffForm(f=>({...f,full_name:e.target.value}))} placeholder={t('manage.staffName')} className={inputCls} /></div>
-                <div><label className={`block text-sm ${textSub} mb-1`}>{staffEditing ? t('manage.passwordEditLabel') : t('manage.passwordLabel')}</label><input type="password" value={staffForm.password} onChange={e=>setStaffForm(f=>({...f,password:e.target.value}))} placeholder="••••••" className={inputCls} /></div>
-                <div><label className={`block text-sm ${textSub} mb-1`}>{t('manage.roleLabel')}</label>
-                  <select value={staffForm.role} onChange={e=>setStaffForm(f=>({...f,role:e.target.value}))} className={inputCls}>
-                    <option value="waiter">{t('manage.roleWaiter')}</option>
-                    <option value="cashier">{t('manage.roleCashier')}</option>
-                    <option value="admin">{t('manage.roleAdmin')}</option>
-                  </select></div>
-                {staffEditing && <label className={`flex items-center gap-3 cursor-pointer text-sm ${textSub}`}><input type="checkbox" checked={staffForm.active!==false} onChange={e=>setStaffForm(f=>({...f,active:e.target.checked}))} className="w-4 h-4 accent-blue-500"/>{t('manage.accountActive')}</label>}
-                {staffError && <div className="text-red-400 text-sm bg-red-500/10 px-3 py-2 rounded-xl">{staffError}</div>}
-                <div className="flex gap-3">
-                  <button onClick={submitStaff} className="flex-1 bg-blue-500 hover:bg-blue-600 py-2.5 rounded-xl font-bold text-white text-sm transition">{staffEditing ? t('manage.saveBtn') : t('manage.createBtn')}</button>
-                  <button onClick={()=>setStaffShowForm(false)} className={`flex-1 ${bgCard} py-2.5 rounded-xl font-bold text-sm transition hover:bg-slate-600`}>{t('common.cancel')}</button>
-                </div>
-              </div>
-            </div>
-          )}
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold text-base"><i className="fa-solid fa-users mr-2 text-blue-400"/>{t('manage.staffList')}</h3>
-            <button onClick={openCreateStaff} className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold rounded-xl transition"><i className="fa-solid fa-plus mr-1"/>{t('common.add')}</button>
-          </div>
-          {staffList.length===0 ? <div className={`${bgCard} rounded-2xl p-8 text-center ${textSub} text-sm`}>{t('manage.noStaff')}</div> : staffList.map(u => {
-            const rc = u.role==="admin"?"text-red-400 bg-red-500/10":u.role==="cashier"?"text-yellow-400 bg-yellow-500/10":"text-green-400 bg-green-500/10";
-            const rl = u.role==="admin"?t('manage.roleAdmin'):u.role==="cashier"?t('manage.roleCashier'):t('manage.roleWaiter');
-            return (
-              <div key={u.id} className={`${bgCard} rounded-2xl p-4 flex items-center gap-3`}>
-                <div className="w-10 h-10 rounded-full bg-slate-600 flex items-center justify-center flex-shrink-0 font-bold text-white text-base">{(u.full_name||u.username||"?")[0].toUpperCase()}</div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-bold text-sm">{u.full_name||u.username}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${rc}`}>{rl}</span>
-                    {!u.active && <span className="text-xs px-2 py-0.5 rounded-full bg-slate-600 text-slate-400">{t('manage.accountLocked')}</span>}
-                  </div>
-                  <div className={`text-xs mt-0.5 ${textSub}`}>@{u.username}</div>
-                </div>
-                <div className="flex gap-2 flex-shrink-0">
-                  <button onClick={()=>openEditStaff(u)} className={`w-8 h-8 rounded-xl flex items-center justify-center ${darkMode?"bg-slate-600 hover:bg-blue-500":"bg-gray-200 hover:bg-blue-500 hover:text-white"} transition`}><i className="fa-solid fa-pen text-xs"/></button>
-                  <button onClick={()=>deleteStaff(u)} disabled={u.username==="admin"} className={`w-8 h-8 rounded-xl flex items-center justify-center transition ${u.username==="admin"?"bg-slate-700 text-slate-600 cursor-not-allowed":darkMode?"bg-slate-600 hover:bg-red-500 hover:text-white":"bg-gray-200 hover:bg-red-500 hover:text-white"}`}><i className="fa-solid fa-trash text-xs"/></button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
     </div>
   );
 }
