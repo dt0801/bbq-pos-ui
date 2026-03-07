@@ -17,6 +17,7 @@ const KPI = ({ icon, label, value, sub, accent, bgCard }) => (
 );
 
 const BarChart = ({ data, labelKey, valueKey, accent = "#10b981" }) => {
+  const formatMoney = useFormatMoney();
   const max = Math.max(...data.map(d => Number(d[valueKey]) || 0), 1);
   return (
     <div className="flex items-end gap-1 h-36 mt-2">
@@ -156,6 +157,7 @@ export default function StatsView({
   bgCard, inputCls,
 }) {
   const t = useT();
+  const formatMoney = useFormatMoney();
 
   const tabs = [
     { id: "day",   label: t('stats.day'),   icon: "fa-calendar-day" },
