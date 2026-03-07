@@ -1,9 +1,10 @@
 // ─── Header — thanh trên mobile ───────────────────────────────────────────────
 import React from "react";
-import { useT } from "../../i18n";
+import { useT, useLanguage, LANGUAGE_OPTIONS } from "../../i18n";
 
 export default function Header({ currentTable, tableStatus, printerStatus, darkMode, setDarkMode, logout, textSub }) {
   const t = useT();
+  const { lang, changeLanguage } = useLanguage();
   return (
     <div className={`bg-[#0b1220] px-4 py-3 flex items-center justify-between flex-shrink-0 border-b ${darkMode ? "border-slate-700" : "border-gray-300"}`}>
       <div className="flex items-center gap-2">
@@ -16,6 +17,16 @@ export default function Header({ currentTable, tableStatus, printerStatus, darkM
         )}
       </div>
       <div className="flex items-center gap-3">
+        {/* ── Language switcher compact ── */}
+        <div className="flex items-center gap-1">
+          {LANGUAGE_OPTIONS.map(opt => (
+            <button key={opt.code} onClick={() => changeLanguage(opt.code)}
+              title={opt.label}
+              className={`text-base leading-none transition-all ${lang === opt.code ? "opacity-100 scale-110" : "opacity-40 hover:opacity-70"}`}>
+              {opt.flag}
+            </button>
+          ))}
+        </div>
         <span className={`w-2 h-2 rounded-full ${printerStatus === "online" ? "bg-green-400" : printerStatus === "offline" ? "bg-red-500" : "bg-yellow-400 animate-pulse"}`} />
         <button onClick={() => setDarkMode(d => !d)} className={`${textSub} text-lg`}>
           {darkMode ? <i className="fa-solid fa-sun" /> : <i className="fa-solid fa-moon" />}
